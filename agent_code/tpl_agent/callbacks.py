@@ -4,9 +4,7 @@ import random
 
 import numpy as np
 
-
 ACTIONS = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
-
 
 def setup(self):
     """
