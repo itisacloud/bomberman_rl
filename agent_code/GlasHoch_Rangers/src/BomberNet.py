@@ -24,7 +24,6 @@ class DQNetwork(nn.Module):
         self.action_dim = action_dim
 
 
-
         self.online = nn.Sequential(
             nn.Conv2d(in_channels=c, out_channels=32, kernel_size=8, stride=4),
             nn.ReLU(),
