@@ -82,11 +82,61 @@ class State():
 
         return movable_fields
 
+    def a_star(matrix, start, goal):
+        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        open_set = [(0, start)]  # Priority queue (cost, position)
+        closed_set = set()
+        path_matrix = [[None for _ in range(len(matrix[0]))] for _ in range(len(matrix))]
+        path_matrix[start[0]][start[1]] = []
+
+        while open_set:
+            cost, current = heapq.heappop(open_set)
+
+            if current == goal:
+                return path_matrix[current[0]][current[1]]
+
+            closed_set.add(current)
+
+            for dx, dy in directions:
+                new_x, new_y = current[0] + dx, current[1] + dy
+                new_pos = (new_x, new_y)
+
+                if (
+                        0 <= new_x < len(matrix) and
+                        0 <= new_y < len(matrix[0]) and
+                        matrix[new_x][new_y] == 1 and
+                        new_pos not in closed_set
+                ):
+                    new_cost = cost + 1
+                    heapq.heappush(open_set, (new_cost + manhattan_distance(new_pos, goal), new_pos))
+                    if path_matrix[new_x][new_y] is None or len(path_matrix[new_x][new_y]) > len(
+                            path_matrix[current[0]][current[1]]) + 1:
+                        path_matrix[new_x][new_y] = path_matrix[current[0]][current[1]] + [current]
+
+        return None
+
 
 
     def distance(self, pos1, pos2):
         return np.sum(np.abs(np.array(pos1) - np.array(pos2)))
 
+    def getReachabelFields(self, field, movable_fields, pos, steps):
+        reachabel_fields = np.zeros_like(field)
+        reachabel_fields[pos[0], pos[1]] = 1
+        for i in range(steps):
+            prev_len = len(np.where(reachabel_fields == 1)[0])
+            for x, y in np.where(reachabel_fields == 1):
+                if movable_fields[x + 1, y] == 1:
+                    reachabel_fields[x + 1, y] = 1
+                if movable_fields[x - 1, y] == 1:
+                    reachabel_fields[x - 1, y] = 1
+                if movable_fields[x, y + 1] == 1:
+                    reachabel_fields[x, y + 1] = 1
+                if movable_fields[x, y - 1] == 1:
+                    reachabel_fields[x, y - 1] = 1
+            if len(np.where(reachabel_fields == 1)[0]) == prev_len:
+                break
+        return reachabel_fields
 
     def getFeatures(self, game_state):
         # get features
@@ -125,7 +175,6 @@ class State():
             coins_pos_map[pos[1], pos[0]] = 1
         coins_pos_map = self.window(coins_pos_map,agent_pos, self.window_size)
 
-
         distances_to_coins = [self.distance(agent_pos,coin) for coin in coins]
 
         #direction to closest coin
@@ -142,6 +191,8 @@ class State():
 
 
         moveable_fields = self.get_movable_fields(field,explosion_map,bomb,enemies_pos)
+        reachabel_fields = self.getReachabelFields(field,moveable_fields,agent_pos,)
+
 
         # apply windows
         field = self.window(field,agent_pos,self.window_size,constant = -2)
@@ -149,6 +200,9 @@ class State():
         coins_pos_map = self.window(coins_pos_map,agent_pos,self.window_size,constant = 0)
         enemies_pos_map = self.window(enemies_pos_map,agent_pos,self.window_size,constant = 0)
         moveable_fields = self.window(moveable_fields,agent_pos,self.window_size,constant = -1)
+        reachabel_fields = self.window(reachabel_fields,agent_pos,self.window_size,constant = 0)
+        
+
 
         # get features
 

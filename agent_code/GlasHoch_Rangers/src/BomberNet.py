@@ -1,25 +1,21 @@
 import torch
 from torch import nn, optim
-from torchvision import transforms as T
-from PIL import Image
+
 import numpy as np
 from pathlib import Path
-from collections import deque
 import random, datetime, os, copy
 
-from tensordict import TensorDict
-from torchrl.data import TensorDictReplayBuffer, LazyMemmapStorage
+
 
 class DQNetwork(nn.Module):
     '''mini cnn structure
     input -> (conv2d + relu) x 3 -> flatten -> (dense + relu) x 2 -> output
     '''
 
-    def __init__(self, input_dim, extra_dim, action_dim, learnin_rate, network_arch=None, is_training=False):
+    def __init__(self, input_dim, extra_dim, action_dim):
         super().__init__()
         c, h, w = input_dim
 
-        self.network_arch = network_arch
         self.extra_dim = extra_dim
         self.action_dim = action_dim
 
@@ -43,13 +39,95 @@ class DQNetwork(nn.Module):
         for p in self.target.parameters():
             p.requires_grad = False
 
-        self.optimizer = optim.RMSprop(self.parameters(), lr=learnin_rate)
-        self.optimizer = optim.RMSprop(self.parameters(), lr=learnin_rate)
-        self.loss = nn.MSELoss()
-
-
     def forward(self, input, model):
         if model == "online":
             return self.online(input)
         elif model == "target":
             return self.target(input)
+
+class Agent():
+    def __init__(self,state_dim, extra_dim, action_dim, AGENT_CONFIG):
+        # Hyperparameters
+        super().__init__(state_dim, extra_dim, action_dim, AGENT_CONFIG)
+        self.network_arch = None
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+        self.net = DQNetwork()
+        self.save_path = Path(__file__).parent / "model.pt"
+
+        #setting up the network
+        self.net = DQNetwork()
+        self.net.to(self.device)
+
+        self.burnin = 1e4  # min. experiences before training
+        self.learn_every = 3  # no. of experiences between updates to Q_online
+        self.sync_every = 1e4  # no. of experiences between Q_target & Q_online sync
+
+        self.gamma = 0.9
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
+        self.loss_fn = torch.nn.SmoothL1Loss()
+
+    def learn(self):
+        if self.curr_step % self.sync_every == 0:
+            self.sync_Q_target()
+
+        if self.curr_step % self.save_every == 0:
+            self.save()
+
+        if self.curr_step < self.burnin:
+            return None, None
+
+        if self.curr_step % self.learn_every != 0:
+            return None, None
+
+            # Sample from memory
+        state, next_state, action, reward, done = self.recall()
+
+        # Get TD Estimate
+        td_est = self.td_estimate(state, action)
+
+        # Get TD Target
+        td_tgt = self.td_target(reward, next_state, done)
+
+        # Backpropagate loss through Q_online
+        loss = self.update_Q_online(td_est, td_tgt)
+
+        return (td_est.mean().item(), loss)
+
+    def update_Q_online(self, td_estimate, td_target):
+        loss = self.loss_fn(td_estimate, td_target)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        return loss.item()
+
+    def sync_Q_target(self):
+        self.net.target.load_state_dict(self.net.online.state_dict())
+
+    def td_estimate(self, state, action):
+        current_Q = self.net(state, model="online")[
+            np.arange(0, self.batch_size), action
+        ]  # Q_online(s,a)
+        return current_Q
+
+    @torch.no_grad()
+    def td_target(self, reward, next_state, done):
+        next_state_Q = self.net(next_state, model="online")
+        best_action = torch.argmax(next_state_Q, axis=1)
+        next_Q = self.net(next_state, model="target")[
+            np.arange(0, self.batch_size), best_action
+        ]
+        return (reward + (1 - done.float()) * self.gamma * next_Q).float()
+
+    def save(self):
+        if self.save_dir is None:
+            print("Cannot save model. No save directory given.")
+            return
+        if self.curr_step % self.save_every != 0:
+            return
+        save_path = (
+                self.save_dir / f"agent_{int(self.curr_step // self.save_every)}.pth"
+        )
+        torch.save(self.net.state_dict(), save_path)
+
+
