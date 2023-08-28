@@ -1,0 +1,5 @@
+AGENT_CONFIG:
+  window_size: 10 #example
+REWARDS:
+  "KILL_ENEMY": 1
+

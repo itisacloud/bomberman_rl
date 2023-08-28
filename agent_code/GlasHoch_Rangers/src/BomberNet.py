@@ -110,14 +110,18 @@ class Agent():
         ]  # Q_online(s,a)
         return current_Q
 
+    #tutorial with Double DQN
     @torch.no_grad()
     def td_target(self, reward, next_state, done):
-        next_state_Q = self.net(next_state, model="online")
-        best_action = torch.argmax(next_state_Q, axis=1)
-        next_Q = self.net(next_state, model="target")[
-            np.arange(0, self.batch_size), best_action
-        ]
-        return (reward + (1 - done.float()) * self.gamma * next_Q).float()
+        next_state_Q_online = self.net(next_state, model="online")
+        best_action_online = torch.argmax(next_state_Q_online, axis=1)
+
+        next_state_Q_target = self.net(next_state, model="target")
+        next_Q_values = next_state_Q_target[np.arange(0, self.batch_size), best_action_online]
+
+        td_targets = (reward + (1 - done.float()) * self.gamma * next_Q_values).float()
+
+        return td_targets
 
     def save(self):
         if self.save_dir is None:
