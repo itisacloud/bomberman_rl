@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Memory:
-    def __init__(self, input_dim: tuple[int, int, int], size: int):
+    def __init__(self, input_dim: tuple[int, int, int], size: int,done: bool):
         self.size = size
         self.index = 0
 
@@ -10,8 +10,10 @@ class Memory:
         self.next_states = np.zeros((size, *input_dim), dtype=np.float32)
         self.actions = np.zeros((size), dtype=np.str_)
         self.rewards = np.zeros((size), dtype=np.int32)
+        self.done = np.zeros((size), dtype=np.bool_)
 
-    def cache(self, state: np.ndarray, next_state: np.ndarray, action: str, reward: int):
+
+    def cache(self, state: np.ndarray, next_state: np.ndarray, action: str, reward: int, done: bool):
         if self.index >= self.size:
             self.index = 0
 
@@ -19,8 +21,10 @@ class Memory:
         self.next_states[self.index] = next_state
         self.actions[self.index] = action
         self.rewards[self.index] = reward
+        self.done[self.index] = done
+
         self.index += 1
 
-    def sample(self, batch_size: int = 1) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    def sample(self, batch_size: int = 1) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         indices = np.random.choice(self.size, batch_size, replace=False)
-        return self.states[indices], self.next_states[indices], self.actions[indices], self.rewards[indices]
+        return self.states[indices], self.next_states[indices], self.actions[indices], self.rewards[indices], self.done[indices]
