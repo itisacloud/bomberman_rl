@@ -82,7 +82,7 @@ class State():
 
         return movable_fields
 
-    def a_star(matrix, start, goal):
+    def a_star(self,matrix, start, goal):
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         open_set = [(0, start)]  # Priority queue (cost, position)
         closed_set = set()
@@ -108,7 +108,7 @@ class State():
                         new_pos not in closed_set
                 ):
                     new_cost = cost + 1
-                    heapq.heappush(open_set, (new_cost + manhattan_distance(new_pos, goal), new_pos))
+                    heapq.heappush(open_set, (new_cost + self.distance(new_pos, goal), new_pos))
                     if path_matrix[new_x][new_y] is None or len(path_matrix[new_x][new_y]) > len(
                             path_matrix[current[0]][current[1]]) + 1:
                         path_matrix[new_x][new_y] = path_matrix[current[0]][current[1]] + [current]

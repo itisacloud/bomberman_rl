@@ -5,6 +5,8 @@ import numpy as np
 from pathlib import Path
 import random, datetime, os, copy
 
+from cache import Memory
+
 
 
 class DQNetwork(nn.Module):
@@ -67,6 +69,10 @@ class Agent():
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
 
+        self.memory = Memory(AGENT_CONFIG["state_dim"], AGENT_CONFIG["extra_dim"], AGENT_CONFIG["action_dim"], int(AGENT_CONFIG["memory_size"]))
+
+    def
+
     def learn(self):
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
@@ -80,14 +86,13 @@ class Agent():
         if self.curr_step % self.learn_every != 0:
             return None, None
 
-            # Sample from memory
-        state, next_state, action, reward, done = self.recall()
+        new_state,old_state,action,reward = self.memory.sample(self.batch_size)
 
         # Get TD Estimate
-        td_est = self.td_estimate(state, action)
+        td_est = self.td_estimate(old_state, action)
 
         # Get TD Target
-        td_tgt = self.td_target(reward, next_state, done)
+        td_tgt = self.td_target(reward, new_state, done)
 
         # Backpropagate loss through Q_online
         loss = self.update_Q_online(td_est, td_tgt)
