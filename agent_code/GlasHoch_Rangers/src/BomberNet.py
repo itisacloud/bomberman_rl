@@ -51,6 +51,8 @@ class Agent():
     def __init__(self,state_dim, extra_dim, action_dim, AGENT_CONFIG):
         # Hyperparameters
         super().__init__(state_dim, extra_dim, action_dim, AGENT_CONFIG)
+        self.save_every = None
+        self.curr_step = None
         self.network_arch = None
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -71,7 +73,6 @@ class Agent():
 
         self.memory = Memory(AGENT_CONFIG["state_dim"], AGENT_CONFIG["extra_dim"], AGENT_CONFIG["action_dim"], int(AGENT_CONFIG["memory_size"]))
 
-    def
 
     def learn(self):
         if self.curr_step % self.sync_every == 0:
@@ -86,7 +87,7 @@ class Agent():
         if self.curr_step % self.learn_every != 0:
             return None, None
 
-        new_state,old_state,action,reward = self.memory.sample(self.batch_size)
+        new_state,old_state,action,reward,done = self.memory.sample(self.batch_size)
 
         # Get TD Estimate
         td_est = self.td_estimate(old_state, action)
