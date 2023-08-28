@@ -1,12 +1,11 @@
-import torch
-from torch import nn, optim
+import copy
+from pathlib import Path
 
 import numpy as np
-from pathlib import Path
-import random, datetime, os, copy
+import torch
+from torch import nn
 
 from cache import Memory
-
 
 
 class DQNetwork(nn.Module):
@@ -20,7 +19,6 @@ class DQNetwork(nn.Module):
 
         self.extra_dim = extra_dim
         self.action_dim = action_dim
-
 
         self.online = nn.Sequential(
             nn.Conv2d(in_channels=c, out_channels=32, kernel_size=8, stride=4),
@@ -47,8 +45,9 @@ class DQNetwork(nn.Module):
         elif model == "target":
             return self.target(input)
 
+
 class Agent():
-    def __init__(self,state_dim, extra_dim, action_dim, AGENT_CONFIG):
+    def __init__(self, state_dim, extra_dim, action_dim, AGENT_CONFIG):
         # Hyperparameters
         super().__init__(state_dim, extra_dim, action_dim, AGENT_CONFIG)
         self.save_every = None
@@ -59,7 +58,7 @@ class Agent():
         self.net = DQNetwork()
         self.save_path = Path(__file__).parent / "model.pt"
 
-        #setting up the network
+        # setting up the network
         self.net = DQNetwork()
         self.net.to(self.device)
 
@@ -71,8 +70,8 @@ class Agent():
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
 
-        self.memory = Memory(AGENT_CONFIG["state_dim"], AGENT_CONFIG["extra_dim"], AGENT_CONFIG["action_dim"], int(AGENT_CONFIG["memory_size"]))
-
+        self.memory = Memory(AGENT_CONFIG["state_dim"], AGENT_CONFIG["extra_dim"], AGENT_CONFIG["action_dim"],
+                             int(AGENT_CONFIG["memory_size"]))
 
     def learn(self):
         if self.curr_step % self.sync_every == 0:
@@ -87,7 +86,7 @@ class Agent():
         if self.curr_step % self.learn_every != 0:
             return None, None
 
-        new_state,old_state,action,reward,done = self.memory.sample(self.batch_size)
+        new_state, old_state, action, reward, done = self.memory.sample(self.batch_size)
 
         # Get TD Estimate
         td_est = self.td_estimate(old_state, action)
@@ -116,7 +115,7 @@ class Agent():
         ]  # Q_online(s,a)
         return current_Q
 
-    #tutorial with Double DQN
+    # tutorial with Double DQN
     @torch.no_grad()
     def td_target(self, reward, next_state, done):
         next_state_Q_online = self.net(next_state, model="online")
@@ -139,5 +138,3 @@ class Agent():
                 self.save_dir / f"agent_{int(self.curr_step // self.save_every)}.pth"
         )
         torch.save(self.net.state_dict(), save_path)
-
-
