@@ -1,3 +1,11 @@
-# bomberman_rl
-Setup for a project/competition amongst students to train a winning Reinforcement Learning agent for the classic game Bomberman.
-
+# Current ToDos:
+- finish agent code:
+  - set up NN, play around with the layers, the ones from the tutorial might not be the best.
+  - handle caching, function to sample cache
+  - how to handle checkpoints
+  - 
+- features:
+  - implement wayfinding
+  - moving kernels?
+  - cluster coins?
+  - how to handle players with diffrent amount of points (maybe target players with higher points?)
