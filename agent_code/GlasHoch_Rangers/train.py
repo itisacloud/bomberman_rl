@@ -40,11 +40,11 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     #todo save model
 
 class RewardHandler():
-    def __int__(self,configReward:str):
-        self.configReward = configReward
+    def __int__(self,REWARD_CONFIG:str):
+        self.configReward = REWARD_CONFIG
     def reward_from_state(self, new_game_state,old_game_state,events,rewards) -> int:
         reward = 0
-        #to
+        return reward
 
 
 

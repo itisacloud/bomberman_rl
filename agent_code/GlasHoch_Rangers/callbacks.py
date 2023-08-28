@@ -1,11 +1,16 @@
 import os
 
+import torch
+
 from agent_code.GlasHoch_Rangers.src.BomberNet import DQNetwork
 from agent_code.GlasHoch_Rangers.src.State import State
 import yaml
 from BomberNet import Agent
 
 import numpy as np
+
+actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
+
 def setup(self):
     np.random.seed(42)
 
@@ -18,8 +23,22 @@ def setup(self):
     self.state_processor = State(AGENT_CONFIG["state_dim"], AGENT_CONFIG["extra_dim"], AGENT_CONFIG["action_dim"],)
 
 
-def act(self):
-    self.agent.act()
+def act(self, game_state: dict) -> str:
+    if np.random.rand() < self.exploration_rate:
+        action_idx = np.random.randint(self.action_dim)
+        # EXPLOIT
+    else:
+        features = self.state_processor.process(game_state)
+        action_values = self.net(features, model="online")
+        action_idx = torch.argmax(action_values, axis=1).item()
+    # decrease exploration_rate
+    self.exploration_rate *= self.exploration_rate_decay
+    self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
+
+    # increment step
+    self.curr_step += 1
+
+    return actions[action_idx]
 
 
 
