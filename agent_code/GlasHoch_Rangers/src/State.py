@@ -25,6 +25,16 @@ class State:
 
         return padded[position[0]:position[0] + 2 * window_size + 1, position[1]:position[1] + 2 * window_size + 1]
 
+    def extra_to_map(self,extra_features,field):
+        maps = []
+        for feature in extra_features:
+            if feature == 0:
+                maps.append(np.zeros_like(field))
+            else:
+                maps.append(np.ones_like(field)*feature)
+        return np.array(maps)
+
+
     def get_blast_coords(self, field, bombs_pos, blast_strength):
         x, y = bombs_pos
         blast_coords = [(x, y)]
@@ -192,4 +202,7 @@ class State:
         moveable_fields = self.window(moveable_fields, agent_pos, self.window_size, constant=-1)
         reachabel_fields = self.window(reachabel_fields, agent_pos, self.window_size, constant=0)
 
-        # get features
+        feautres = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,moveable_fields,reachabel_fields]) # get features
+        extra_feautres = np.concatenate([self.extra_to_map(feautres) for features in [has_bomb, *bomb_timer, *enemies_bomb]])# get extra features
+
+        return feautres,extra_feautres

@@ -4,7 +4,7 @@ from typing import List
 
 
 from src.State import State
-from src.State import State.distance as distance
+from src.State import State.distance as distance #arrrggg
 
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))

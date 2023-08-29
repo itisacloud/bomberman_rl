@@ -17,11 +17,11 @@ class DQNetwork(nn.Module):
         super().__init__()
         c, h, w = input_dim
 
-        self.extra_dim = extra_dim #how to handle extra dim?
+        c_e, h_e, w_e = extra_dim
         self.action_dim = action_dim
 
-        self.online = nn.Sequential(
-            nn.Conv2d(in_channels=c, out_channels=32, kernel_size=8, stride=4),
+        self.online = nn.Sequential( # how to adjust the input_dim with the new extra dim?
+            nn.Conv2d(in_channels=c+c_e, out_channels=32, kernel_size=8, stride=4),
             nn.ReLU(),
             nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
             nn.ReLU(),
@@ -39,11 +39,12 @@ class DQNetwork(nn.Module):
         for p in self.target.parameters():
             p.requires_grad = False
 
-    def forward(self, input, model):
+    def forward(self, input, extra_input, model="online"):
+        combined_input = torch.cat((input, extra_input), dim=1)
         if model == "online":
-            return self.online(input)
+            return self.online(combined_input)
         elif model == "target":
-            return self.target(input)
+            return self.target(combined_input)
 
 
 class Agent():
@@ -138,6 +139,8 @@ class Agent():
         td_targets = (reward + (1 - done.float()) * self.gamma * next_Q_values).float()
 
         return td_targets
+
+    d
 
     def save(self):
         if self.save_dir is None:
