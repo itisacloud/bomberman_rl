@@ -9,42 +9,41 @@ from .cache import Memory
 
 
 class DQNetwork(nn.Module):
-    '''mini cnn structure
-    input -> (conv2d + relu) x 3 -> flatten -> (dense + relu) x 2 -> output
-    '''
-
-    def __init__(self, input_dim, extra_dim=0, action_dim=6):
+    def __init__(self, input_dim, output_dim):
         super().__init__()
         c, h, w = input_dim
 
-        c_e, h_e, w_e = extra_dim
-        self.action_dim = action_dim
-
-        self.online = nn.Sequential( # how to adjust the input_dim with the new extra dim?
-            nn.Conv2d(in_channels=c+c_e, out_channels=32, kernel_size=8, stride=4),
+        self.online = nn.Sequential(
+            nn.Conv2d(in_channels=c, out_channels=64, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
+            nn.BatchNorm2d(64),
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
+            nn.BatchNorm2d(256),
+            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2),
             nn.Flatten(),
-            nn.Linear(3136, 512),
+            nn.Linear(512 * (h // 4) * (w // 4), 1024),
             nn.ReLU(),
-            nn.Linear(512, action_dim),
+            nn.Linear(1024, 512),
+            nn.ReLU(),
+            nn.Linear(512, output_dim)
         )
-
         self.target = copy.deepcopy(self.online)
 
         # Q_target parameters are frozen.
         for p in self.target.parameters():
             p.requires_grad = False
 
-    def forward(self, input, extra_input, model="online"):
-        combined_input = torch.cat((input, extra_input), dim=1)
+    def forward(self, input, model):
         if model == "online":
-            return self.online(combined_input)
+            return self.online(input)
         elif model == "target":
-            return self.target(combined_input)
+            return self.target(input)
 
 
 class Agent():
@@ -139,8 +138,6 @@ class Agent():
         td_targets = (reward + (1 - done.float()) * self.gamma * next_Q_values).float()
 
         return td_targets
-
-    d
 
     def save(self):
         if self.save_dir is None:

@@ -21,7 +21,7 @@ class State:
 
     def window(self, map, position, window_size, constant=-1):
 
-        padded = np.pad = np.pad(map, window_size, mode='constant', constant_values=constant)
+        padded = np.pad(map, window_size, mode='constant', constant_values=constant)
 
         return padded[position[0]:position[0] + 2 * window_size + 1, position[1]:position[1] + 2 * window_size + 1]
 
@@ -126,6 +126,8 @@ class State:
     def paths_to_idw_matrix(self,field,paths):
         matrix = np.zeros_like(field)
         for path in paths:
+            if path is None:
+                continue
             for i,pos in enumerate(path):
                 matrix[pos[0],pos[1]] += 1 / (i+1)
         return matrix
@@ -134,23 +136,24 @@ class State:
     def distance(self, pos1, pos2):
         return np.sum(np.abs(np.array(pos1) - np.array(pos2)))
 
-    def getReachabelFields(self, field, movable_fields, pos, steps):
-        reachabel_fields = np.zeros_like(field)
-        reachabel_fields[pos[0], pos[1]] = 1
+    def getReachabelFields(self, field, movable_fields, pos, steps=20):
+        reachable_fields = np.zeros_like(field, dtype=np.int32)
+        reachable_fields[pos[0], pos[1]] = 1
+
         for i in range(steps):
-            prev_len = len(np.where(reachabel_fields == 1)[0])
-            for x, y in np.where(reachabel_fields == 1):
-                if movable_fields[x + 1, y] == 1:
-                    reachabel_fields[x + 1, y] = 1
-                if movable_fields[x - 1, y] == 1:
-                    reachabel_fields[x - 1, y] = 1
-                if movable_fields[x, y + 1] == 1:
-                    reachabel_fields[x, y + 1] = 1
-                if movable_fields[x, y - 1] == 1:
-                    reachabel_fields[x, y - 1] = 1
-            if len(np.where(reachabel_fields == 1)[0]) == prev_len:
+            prev_reachable = np.copy(reachable_fields)
+
+            for x, y in np.argwhere(reachable_fields == 1):
+                neighbors = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
+
+                for nx, ny in neighbors:
+                    if 0 <= nx < field.shape[0] and 0 <= ny < field.shape[1] and movable_fields[nx, ny] == 1:
+                        reachable_fields[nx, ny] = 1
+
+            if np.array_equal(reachable_fields, prev_reachable):
                 break
-        return reachabel_fields
+
+        return reachable_fields
 
     def getFeatures(self, game_state):
         # get features
@@ -180,7 +183,7 @@ class State:
 
         # position of enemys on map
         for i, pos in enumerate(enemies_pos):
-            enemies_pos_map[pos[1], pos[0]] = 1
+            enemies_pos_map[pos[0], pos[1]] = 1
         enemies_pos_map = self.window(enemies_pos_map, agent_pos, self.window_size)
 
         coins_pos_map = np.zeros_like(field)
@@ -203,6 +206,6 @@ class State:
         reachabel_fields = self.window(reachabel_fields, agent_pos, self.window_size, constant=0)
 
         feautres = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,moveable_fields,reachabel_fields]) # get features
-        extra_feautres = np.concatenate([self.extra_to_map(feautres) for features in [has_bomb, *bomb_timer, *enemies_bomb]])# get extra features
+        #extra_feautres = np.concatenate([self.extra_to_map(feautres,field) for features in [has_bomb, *bomb_timer, *enemies_bomb]])# get extra features
 
-        return feautres,extra_feautres
+        return feautres#,extra_feautres
