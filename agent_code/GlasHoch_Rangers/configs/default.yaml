@@ -1,5 +1,28 @@
 AGENT_CONFIG:
-  window_size: 10 #example
-REWARDS:
-  "KILL_ENEMY": 1
+  state_dim: <state_dimension_value>
+  extra_dim: <extra_dimension_value>
+  action_dim: <action_dimension_value>
+  batch_size: <batch_size_value>
+  memory_size: <memory_size_value>
+  burnin: <burnin_value>
+  learn_evry: <learn_every_value>
+  sync_evry: <sync_every_value>
+  gamma: <gamma_value>
+  save_every: <save_every_value>
+  curr_step: <curr_step_value>
 
+REWARD_CONFIG:
+    MOVED_LEFT: 1
+    MOVED_RIGHT: 1
+    MOVED_UP: 1
+    MOVED_DOWN: 1
+    WAITED: -1
+    INVALID_ACTION: -1
+    BOMB_DROPPED: 1
+    BOMB_EXPLODED: 1
+    CRATE_DESTROYED: 1
+    COIN_FOUND: 1
+    COIN_COLLECTED: 1
+    KILLED_OPPONENT: 1
+    KILLED_SELF: -1
+    GOT_KILLED: -1

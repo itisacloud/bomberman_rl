@@ -1,7 +1,9 @@
+import heapq
+
 import numpy as np
 
 
-class State():
+class State:
     def __init__(self, window_size):
         self.window_size = window_size
         self.new_round()
@@ -111,6 +113,13 @@ class State():
                         path_matrix[new_x][new_y] = path_matrix[current[0]][current[1]] + [current]
 
         return None
+    def paths_to_idw_matrix(self,field,paths):
+        matrix = np.zeros_like(field)
+        for path in paths:
+            for i,pos in enumerate(path):
+                matrix[pos[0],pos[1]] += 1 / (i+1)
+        return matrix
+
 
     def distance(self, pos1, pos2):
         return np.sum(np.abs(np.array(pos1) - np.array(pos2)))
@@ -169,19 +178,8 @@ class State():
             coins_pos_map[pos[1], pos[0]] = 1
         coins_pos_map = self.window(coins_pos_map, agent_pos, self.window_size)
 
-        distances_to_coins = [self.distance(agent_pos, coin) for coin in coins]
+        coins_id_map = self.paths_to_idw_matrix(field, [self.a_star(field, agent_pos, coin) for coin in coins])
 
-        # direction to closest coin
-        if len(distances_to_coins) > 0:
-            closest_coin = coins[np.argmin(distances_to_coins)]
-            direction_to_closest_coin = np.array(closest_coin) - np.array(agent_pos)
-
-        if len(distances_to_coins) > 1:
-            weighted = np.array(2, 1)
-            directions = np.array(coins) - np.array(agent_pos)
-            for i, direction in enumerate(directions):
-                weighted += direction / distances_to_coins[i]
-            weighted = weighted / len(coins)
 
         moveable_fields = self.get_movable_fields(field, explosion_map, bomb, enemies_pos)
         reachabel_fields = self.getReachabelFields(field, moveable_fields, agent_pos, )

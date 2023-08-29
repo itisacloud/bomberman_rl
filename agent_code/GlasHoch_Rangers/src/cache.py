@@ -2,7 +2,7 @@ import numpy as np
 
 
 class Memory:
-    def __init__(self, input_dim: tuple[int, int, int], size: int, done: bool):
+    def __init__(self, input_dim: tuple[int, int, int], size: int , done: bool):
         self.size = size
         self.index = 0
 

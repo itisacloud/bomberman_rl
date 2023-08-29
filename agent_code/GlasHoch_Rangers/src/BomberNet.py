@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from cache import Memory
+from .cache import Memory
 
 
 class DQNetwork(nn.Module):
@@ -13,11 +13,11 @@ class DQNetwork(nn.Module):
     input -> (conv2d + relu) x 3 -> flatten -> (dense + relu) x 2 -> output
     '''
 
-    def __init__(self, input_dim, extra_dim, action_dim):
+    def __init__(self, input_dim, extra_dim=0, action_dim=6):
         super().__init__()
         c, h, w = input_dim
 
-        self.extra_dim = extra_dim
+        self.extra_dim = extra_dim #how to handle extra dim?
         self.action_dim = action_dim
 
         self.online = nn.Sequential(
@@ -47,31 +47,42 @@ class DQNetwork(nn.Module):
 
 
 class Agent():
-    def __init__(self, state_dim, extra_dim, action_dim, AGENT_CONFIG):
+    def __init__(self,AGENT_CONFIG,REWARD_CONFIG):
+
+        self.state_dim = AGENT_CONFIG["state_dim"]
+        self.extra_dim = AGENT_CONFIG["extra_dim"]
+        self.action_dim = AGENT_CONFIG["action_dim"]
+        self.batch_size = AGENT_CONFIG["batch_size"]
+        self.memory_size = AGENT_CONFIG["memory_size"]
+        self.save_every = AGENT_CONFIG["save_every"]
+        self.curr_step = AGENT_CONFIG["curr_step"]
+
         # Hyperparameters
-        super().__init__(state_dim, extra_dim, action_dim, AGENT_CONFIG)
         self.save_every = None
         self.curr_step = None
         self.network_arch = None
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.net = DQNetwork()
-        self.save_path = Path(__file__).parent / "model.pt"
+        self.save_dir = "agent_code/GlasHoch_Rangers/models"
 
         # setting up the network
-        self.net = DQNetwork()
+        self.net = DQNetwork(input_dim=self.state_dim,extra_dim=self.extra_dim,action_dim=self.action_dim).float()
         self.net.to(self.device)
 
-        self.burnin = 1e4  # min. experiences before training
-        self.learn_every = 3  # no. of experiences between updates to Q_online
-        self.sync_every = 1e4  # no. of experiences between Q_target & Q_online sync
+        self.burnin = AGENT_CONFIG["burnin"]  # min. experiences before training
+        self.learn_every = AGENT_CONFIG["learn_evry"] # no. of experiences between updates to Q_online
+        self.sync_every = AGENT_CONFIG["sync_evry"]  # no. of experiences between Q_target & Q_online sync
 
-        self.gamma = 0.9
+        self.gamma = AGENT_CONFIG["gamma"]
+
+        # discount factor
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
 
-        self.memory = Memory(AGENT_CONFIG["state_dim"], AGENT_CONFIG["extra_dim"], AGENT_CONFIG["action_dim"],
-                             int(AGENT_CONFIG["memory_size"]))
+        self.memory = Memory(AGENT_CONFIG["state_dim"],self.memory_size)
+
+        self.REWARD_CONFIG = REWARD_CONFIG
 
     def learn(self):
         if self.curr_step % self.sync_every == 0:
