@@ -1,13 +1,11 @@
-
-
 AGENT_CONFIG:
-  state_dim: [6,9,9]
+  state_dim: [6, 9, 9]
   action_dim: 6
   batch_size: 1
   memory_size: 1000
   burnin: 5
-  learn_evry: 4
-  sync_evry: 10
+  learn_evry: 20
+  sync_evry: 40
   gamma: 0.95
   save_every: 500
   curr_step: 0
@@ -16,7 +14,10 @@ AGENT_CONFIG:
   exploration_rate_min: 0.025
   load: False
   load_path: ./models/agent_0.pth
-
+  learning_rate: 0.00025
+  lr_scheduler_step: 1000  # Adjust as needed
+  lr_scheduler_gamma: 0.9  # Adjust as needed
+  exploration_method: epsilon-greedy
 
 REWARD_CONFIG:
   MOVED_LEFT: 0
@@ -24,7 +25,7 @@ REWARD_CONFIG:
   MOVED_UP: 0
   MOVED_DOWN: 0
   WAITED: -2
-  INVALID_ACTION: -10
+  INVALID_ACTION: -100
   BOMB_DROPPED: 1
   BOMB_EXPLODED: 1
   CRATE_DESTROYED: 1
@@ -41,5 +42,4 @@ REWARD_CONFIG:
   BOMB_NEAR_ENEMY: 3
   BOMB_NEXT_TO_ENEMY: 5
   OPPONENT_ELIMINATED: 1
-  SURIVIVED_ROUND: 10
-
+  SURVIVED_ROUND: 10

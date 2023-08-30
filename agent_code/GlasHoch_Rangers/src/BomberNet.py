@@ -18,6 +18,7 @@ class DQNetwork(nn.Module):
         self.online = nn.Sequential(
             nn.Conv2d(in_channels=c, out_channels=64, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
+            nn.Dropout(0.2),  # Adding Dropout layer
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),
@@ -29,6 +30,7 @@ class DQNetwork(nn.Module):
             nn.Flatten(),
             nn.Linear(512 * (h // 4) * (w // 4), 1024),
             nn.ReLU(),
+            nn.Dropout(0.5),  # Adding Dropout layer
             nn.Linear(1024, 512),
             nn.ReLU(),
             nn.Linear(512, output_dim)
@@ -74,12 +76,18 @@ class Agent():
         self.burnin = AGENT_CONFIG["burnin"]  # min. experiences before training
         self.learn_every = AGENT_CONFIG["learn_evry"] # no. of experiences between updates to Q_online
         self.sync_every = AGENT_CONFIG["sync_evry"]  # no. of experiences between Q_target & Q_online sync
-
+        self.exploration_method = AGENT_CONFIG["exploration_method"]
         self.gamma = AGENT_CONFIG["gamma"]
 
         # discount factor
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
         self.loss_fn = torch.nn.SmoothL1Loss()
+
+        self.lr_scheduler_step = AGENT_CONFIG["lr_scheduler_step"]
+        self.lr_scheduler_gamma = AGENT_CONFIG["lr_scheduler_gamma"]
+
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
+        self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=self.lr_scheduler_step,
+                                                            gamma=self.lr_scheduler_gamma)
 
         self.memory = Memory(AGENT_CONFIG["state_dim"],self.memory_size)
 
@@ -145,16 +153,19 @@ class Agent():
         return td_targets
 
     def act(self,features):
-        if np.random.rand() < self.exploration_rate:
-            action_idx = np.random.randint(self.action_dim)
-        else:
+        if self.exploration_method == "epsilon-greedy":
+            if np.random.rand() < self.exploration_rate:
+                action_idx = np.random.randint(self.action_dim)
+            else:
+                action_values = self.net(features, model="online")
+                action_idx = torch.argmax(action_values, axis=1).item()
+        elif self.exploration_method == "boltzmann":
             action_values = self.net(features, model="online")
-            action_idx = torch.argmax(action_values, axis=1).item()
+            probabilities = torch.softmax(action_values / self.temperature, dim=-1)
+            action_idx = torch.multinomial(probabilities, 1).item()
 
-            # decrease exploration_rate
         self.exploration_rate *= self.exploration_rate_decay
         self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
-
         self.curr_step += 1
         return action_idx
 

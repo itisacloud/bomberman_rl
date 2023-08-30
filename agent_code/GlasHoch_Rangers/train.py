@@ -71,12 +71,12 @@ class RewardHandler:
         enemy_positions = [enemy[3] for enemy in old_game_state["others"]]
 
         reward = 0
+
         for event in events:
             try:
                 reward += self.REWARD_CONFIG[event]
             except:
                 print(f"No reward defined for event {event}")
-
 
         """
         if "BOMB_DROPPED" in events and min(
