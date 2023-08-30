@@ -8,6 +8,7 @@ from torch import nn
 from .cache import Memory
 
 
+
 class DQNetwork(nn.Module):
     def __init__(self, input_dim, output_dim):
         super().__init__()
@@ -47,8 +48,13 @@ class DQNetwork(nn.Module):
 
 
 class Agent():
-    def __init__(self,AGENT_CONFIG,REWARD_CONFIG):
+    def __init__(self,AGENT_CONFIG,REWARD_CONFIG,training):
 
+        self.training= training
+
+        self.exploration_rate_min = None
+        self.exploration_rate_decay = None
+        self.exploration_rate = AGENT_CONFIG["exploration_rate"]
         self.state_dim = AGENT_CONFIG["state_dim"]
         self.extra_dim = AGENT_CONFIG["extra_dim"]
         self.action_dim = AGENT_CONFIG["action_dim"]
@@ -138,6 +144,21 @@ class Agent():
         td_targets = (reward + (1 - done.float()) * self.gamma * next_Q_values).float()
 
         return td_targets
+
+    def act(self,features):
+        features = torch.tensor(features).to(torch.float32)
+
+        if np.random.rand() < self.exploration_rate:
+            action_idx = np.random.randint(self.action_dim)
+        else:
+            action_values = self.net(features, model="online")
+            action_idx = torch.argmax(action_values, axis=1).item()
+
+            # decrease exploration_rate
+        self.exploration_rate *= self.exploration_rate_decay
+        self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
+
+        return action_idx
 
     def save(self):
         if self.save_dir is None:

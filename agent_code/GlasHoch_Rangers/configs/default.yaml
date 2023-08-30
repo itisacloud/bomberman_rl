@@ -1,15 +1,14 @@
 AGENT_CONFIG:
-  state_dim: <state_dimension_value>
-  extra_dim: <extra_dimension_value>
-  action_dim: <action_dimension_value>
-  batch_size: <batch_size_value>
-  memory_size: <memory_size_value>
-  burnin: <burnin_value>
-  learn_evry: <learn_every_value>
-  sync_evry: <sync_every_value>
-  gamma: <gamma_value>
-  save_every: <save_every_value>
-  curr_step: <curr_step_value>
+  state_dim: (6,9,9)
+  action_dim: 6
+  batch_size: 32
+  memory_size: 1000
+  burnin: 100
+  learn_evry: 4
+  sync_evry: 10
+  gamma: 0.95
+  save_every: 500
+  curr_step: 0
 
 REWARD_CONFIG:
   MOVED_LEFT: 1
@@ -22,14 +21,14 @@ REWARD_CONFIG:
   BOMB_EXPLODED: 1
   CRATE_DESTROYED: 1
   COIN_FOUND: 1
-  COIN_COLLECTED: 1
-  KILLED_OPPONENT: 1
-  KILLED_SELF: -1
-  GOT_KILLED: -1
-  ALREADY_VISITED: -1
-  MOVED_TOWARDS_COIN_CLUSTER: 1
+  COIN_COLLECTED: 5
+  KILLED_OPPONENT: 10
+  KILLED_SELF: -5
+  GOT_KILLED: -10
+  ALREADY_VISITED: -2
+  MOVED_TOWARDS_COIN_CLUSTER: 2
   MOVED_TOWARDS_ENEMY: 1
-  TRAPPED_ENEMY : 1
-  BOMB_NEAR_CRATE: 1
-  BOMB_NEAR_ENEMY: 1
-  BOMB_NEXT_TO_ENEMY: 1
+  TRAPPED_ENEMY: 5
+  BOMB_NEAR_CRATE: 2
+  BOMB_NEAR_ENEMY: 3
+  BOMB_NEXT_TO_ENEMY: 5

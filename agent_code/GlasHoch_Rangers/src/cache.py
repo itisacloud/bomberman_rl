@@ -2,17 +2,17 @@ import numpy as np
 
 
 class Memory:
-    def __init__(self, input_dim: tuple[int, int, int], size: int , done: bool):
+    def __init__(self, input_dim: tuple[int, int, int], size: int):
         self.size = size
         self.index = 0
 
         self.states = np.zeros((size, *input_dim), dtype=np.float32)
         self.next_states = np.zeros((size, *input_dim), dtype=np.float32)
-        self.actions = np.zeros((size), dtype=np.str_)
+        self.actions = np.zeros((size), dtype=np.int32)
         self.rewards = np.zeros((size), dtype=np.int32)
         self.done = np.zeros((size), dtype=np.bool_)
 
-    def cache(self, state: np.ndarray, next_state: np.ndarray, action: str, reward: int, done: bool):
+    def cache(self, state: np.ndarray, next_state: np.ndarray, action: int, reward: int, done: bool):
         if self.index >= self.size:
             self.index = 0
 
