@@ -13,6 +13,7 @@ EVENTS = ['WAITED', 'MOVED_UP', 'MOVED_DOWN', 'MOVED_LEFT', 'MOVED_RIGHT', 'INVA
           'CRATE_DESTROYED', 'COIN_COLLECTED', 'KILLED_SELF', 'KILLED_OPPONENT', 'OPPONENT_ELIMINATED',
           'BOMB_DROPPED', 'COIN_FOUND', 'SURVIVED_ROUND']
 
+actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
 moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 
 
@@ -31,7 +32,9 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, new_game_
 
     reward = self.reward_handler.reward_from_state(new_game_state, old_game_state, new_features, old_features, events, )
 
-    self.agent.learn(new_features, old_features, self_action, reward)
+    done = False
+
+    self.agent.learn(new_features, old_features, self_action, reward,done)
 
     self.passed_events(events)
     for event in events:
@@ -40,7 +43,10 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, new_game_
 
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
+
     self.agent.save_model()
+
+
     # todo save model
 
 

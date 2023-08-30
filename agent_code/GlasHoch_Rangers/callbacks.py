@@ -18,7 +18,7 @@ def setup(self):
         AGENT_CONFIG,REWARD_CONFIG = yaml.safe_load(ymlfile)
 
     self.agent = Agent(AGENT_CONFIG, REWARD_CONFIG)
-    self.state_processor = State(AGENT_CONFIG["state_dim"], AGENT_CONFIG["extra_dim"], AGENT_CONFIG["action_dim"], )
+    self.state_processor = State(window_size=(AGENT_CONFIG["state_dim"][0]-1)/2)
 
 
 def act(self, game_state: dict) -> str:
