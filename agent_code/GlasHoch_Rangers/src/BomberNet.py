@@ -17,13 +17,11 @@ class DQNetwork(nn.Module):
         self.online = nn.Sequential(
             nn.Conv2d(in_channels=c, out_channels=64, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.BatchNorm2d(64),
             nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),
             nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
-            nn.BatchNorm2d(256),
             nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),
@@ -41,6 +39,7 @@ class DQNetwork(nn.Module):
             p.requires_grad = False
 
     def forward(self, input, model):
+        input = input.unsqueeze(0)
         if model == "online":
             return self.online(input)
         elif model == "target":
@@ -52,28 +51,22 @@ class Agent():
 
         self.training= training
 
-        self.exploration_rate_min = None
-        self.exploration_rate_decay = None
+        self.exploration_rate_min = AGENT_CONFIG["exploration_rate_min"]
+        self.exploration_rate_decay = AGENT_CONFIG["exploration_rate_decay"]
         self.exploration_rate = AGENT_CONFIG["exploration_rate"]
         self.state_dim = AGENT_CONFIG["state_dim"]
-        self.extra_dim = AGENT_CONFIG["extra_dim"]
         self.action_dim = AGENT_CONFIG["action_dim"]
         self.batch_size = AGENT_CONFIG["batch_size"]
         self.memory_size = AGENT_CONFIG["memory_size"]
         self.save_every = AGENT_CONFIG["save_every"]
-        self.curr_step = AGENT_CONFIG["curr_step"]
+        self.curr_step = 0
 
         # Hyperparameters
-        self.save_every = None
-        self.curr_step = None
-        self.network_arch = None
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-
-        self.net = DQNetwork()
-        self.save_dir = "agent_code/GlasHoch_Rangers/models"
+        self.save_dir = "./models"
 
         # setting up the network
-        self.net = DQNetwork(input_dim=self.state_dim,extra_dim=self.extra_dim,action_dim=self.action_dim).float()
+        self.net = DQNetwork(input_dim=self.state_dim,output_dim=self.action_dim).float()
         self.net.to(self.device)
 
         self.burnin = AGENT_CONFIG["burnin"]  # min. experiences before training
@@ -167,6 +160,6 @@ class Agent():
         if self.curr_step % self.save_every != 0:
             return
         save_path = (
-                self.save_dir / f"agent_{int(self.curr_step // self.save_every)}.pth"
+                self.save_dir + f"/agent_{int(self.curr_step // self.save_every)}.pth"
         )
         torch.save(self.net.state_dict(), save_path)

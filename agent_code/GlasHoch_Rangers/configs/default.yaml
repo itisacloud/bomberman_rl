@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  state_dim: (6,9,9)
+  state_dim: [6,9,9]
   action_dim: 6
   batch_size: 32
   memory_size: 1000
@@ -9,6 +9,10 @@ AGENT_CONFIG:
   gamma: 0.95
   save_every: 500
   curr_step: 0
+  exploration_rate: 0.4
+  exploration_rate_decay: 0.999
+  exploration_rate_min: 0.025
+
 
 REWARD_CONFIG:
   MOVED_LEFT: 1
@@ -32,3 +36,5 @@ REWARD_CONFIG:
   BOMB_NEAR_CRATE: 2
   BOMB_NEAR_ENEMY: 3
   BOMB_NEXT_TO_ENEMY: 5
+  OPPONENT_ELIMINATED: 1
+

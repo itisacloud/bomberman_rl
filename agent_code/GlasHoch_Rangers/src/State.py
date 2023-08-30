@@ -21,7 +21,7 @@ class State:
 
     def window(self, map, position, window_size, constant=-1):
 
-        padded = np.pad(map, window_size, mode='constant', constant_values=constant)
+        padded = np.pad(map, pad_width= window_size, mode='constant', constant_values=constant)
 
         return padded[position[0]:position[0] + 2 * window_size + 1, position[1]:position[1] + 2 * window_size + 1]
 
@@ -184,12 +184,10 @@ class State:
         # position of enemys on map
         for i, pos in enumerate(enemies_pos):
             enemies_pos_map[pos[0], pos[1]] = 1
-        enemies_pos_map = self.window(enemies_pos_map, agent_pos, self.window_size)
 
         coins_pos_map = np.zeros_like(field)
         for pos in coins:
             coins_pos_map[pos[1], pos[0]] = 1
-        coins_pos_map = self.window(coins_pos_map, agent_pos, self.window_size)
 
         coins_id_map = self.paths_to_idw_matrix(field, [self.a_star(field, agent_pos, coin) for coin in coins])
 
