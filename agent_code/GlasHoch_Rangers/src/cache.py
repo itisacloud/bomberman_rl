@@ -1,18 +1,17 @@
-import numpy as np
-
+import torch
 
 class Memory:
     def __init__(self, input_dim: tuple[int, int, int], size: int):
         self.size = size
         self.index = 0
 
-        self.states = np.zeros((size, *input_dim), dtype=np.float32)
-        self.next_states = np.zeros((size, *input_dim), dtype=np.float32)
-        self.actions = np.zeros((size), dtype=np.int32)
-        self.rewards = np.zeros((size), dtype=np.int32)
-        self.done = np.zeros((size), dtype=np.bool_)
+        self.states = torch.zeros((size, *input_dim), dtype=torch.float32)
+        self.next_states = torch.zeros((size, *input_dim), dtype=torch.float32)
+        self.actions = torch.zeros((size), dtype=torch.int32)
+        self.rewards = torch.zeros((size), dtype=torch.int32)
+        self.done = torch.zeros((size), dtype=torch.bool)
 
-    def cache(self, state: np.ndarray, next_state: np.ndarray, action: int, reward: int, done: bool):
+    def cache(self, state: torch.Tensor, next_state: torch.Tensor, action: int, reward: int, done: bool):
         if self.index >= self.size:
             self.index = 0
 
@@ -24,7 +23,6 @@ class Memory:
 
         self.index += 1
 
-    def sample(self, batch_size: int = 1) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        indices = np.random.choice(self.size, batch_size, replace=False)
-        return self.states[indices], self.next_states[indices], self.actions[indices], self.rewards[indices], self.done[
-            indices]
+    def sample(self, batch_size: int = 1) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        indices = torch.randint(0, self.size, (batch_size,))
+        return self.states[indices], self.next_states[indices], self.actions[indices], self.rewards[indices], self.done[indices]

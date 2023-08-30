@@ -1,6 +1,7 @@
 import heapq
 
 import numpy as np
+import torch
 
 
 class State:
@@ -203,7 +204,7 @@ class State:
         moveable_fields = self.window(moveable_fields, agent_pos, self.window_size, constant=-1)
         reachabel_fields = self.window(reachabel_fields, agent_pos, self.window_size, constant=0)
 
-        feautres = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,moveable_fields,reachabel_fields]) # get features
+        features = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,moveable_fields,reachabel_fields]) # get features
         #extra_feautres = np.concatenate([self.extra_to_map(feautres,field) for features in [has_bomb, *bomb_timer, *enemies_bomb]])# get extra features
-
-        return feautres#,extra_feautres
+        features = torch.tensor(features).to(torch.float32)
+        return features#,extra_feautres
