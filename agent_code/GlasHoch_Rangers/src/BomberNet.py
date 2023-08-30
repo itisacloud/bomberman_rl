@@ -1,4 +1,5 @@
 import copy
+import os
 from pathlib import Path
 
 import numpy as np
@@ -40,6 +41,7 @@ class DQNetwork(nn.Module):
 
     def forward(self, input, model):
         input = input.unsqueeze(0)
+
         if model == "online":
             return self.online(input)
         elif model == "target":
@@ -101,6 +103,7 @@ class Agent():
 
         new_state, old_state, action, reward, done = self.memory.sample(self.batch_size)
 
+
         # Get TD Estimate
         td_est = self.td_estimate(old_state, action)
 
@@ -142,8 +145,6 @@ class Agent():
         return td_targets
 
     def act(self,features):
-        features = torch.tensor(features).to(torch.float32)
-
         if np.random.rand() < self.exploration_rate:
             action_idx = np.random.randint(self.action_dim)
         else:
@@ -154,6 +155,7 @@ class Agent():
         self.exploration_rate *= self.exploration_rate_decay
         self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
 
+        self.curr_step += 1
         return action_idx
 
     def save(self):
@@ -168,29 +170,16 @@ class Agent():
         torch.save(self.net.state_dict(), save_path)
 
     def load(self, model_path):
-        try:
+        print(model_path)
+        print(os.path.abspath(model_path)
+)
 
-            model_path = "./models/" +  model_path
-            saved_state_dict = torch.load(model_path)
-            model_state_dict = self.net.state_dict()
+        if not Path(model_path).is_file():
+            print(f"Model file not found at {model_path}. Cannot load the model.")
+            return
 
-            # Map saved keys to current model keys
-            mapped_state_dict = {}
-            for saved_key, saved_value in saved_state_dict.items():
-                if saved_key in model_state_dict:
-                    mapped_state_dict[saved_key] = saved_value
+        self.net.load_state_dict(torch.load(model_path))
+        self.sync_Q_target()  # Sync the target network with the loaded model's parameters
 
-            # Load mapped state dictionary
-            self.net.load_state_dict(mapped_state_dict)
-            self.sync_Q_target()  # Sync the target network with the loaded model's parameters
-
-            print(f"Pretrained model loaded from {model_path}")
-
-            # Sync the online network with the loaded model's parameters
-            self.net.online.load_state_dict(self.net.state_dict())
-            print("Online network synced with the loaded model's parameters")
-        except:
-            print("model not loaded due to error, for now just start new since I am to tired to fix it :P")
-            pass
 
 

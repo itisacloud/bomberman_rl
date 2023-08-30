@@ -3,9 +3,9 @@
 AGENT_CONFIG:
   state_dim: [6,9,9]
   action_dim: 6
-  batch_size: 32
+  batch_size: 1
   memory_size: 1000
-  burnin: 100
+  burnin: 5
   learn_evry: 4
   sync_evry: 10
   gamma: 0.95
@@ -14,8 +14,8 @@ AGENT_CONFIG:
   exploration_rate: 0.4
   exploration_rate_decay: 0.999
   exploration_rate_min: 0.025
-  load: True
-  load_path: agent_0.pth
+  load: False
+  load_path: ./models/agent_0.pth
 
 
 REWARD_CONFIG:

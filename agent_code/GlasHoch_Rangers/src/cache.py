@@ -23,6 +23,13 @@ class Memory:
 
         self.index += 1
 
-    def sample(self, batch_size: int = 1) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def sample(self, batch_size: int = 1) -> tuple[
+        torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         indices = torch.randint(0, self.size, (batch_size,))
-        return self.states[indices], self.next_states[indices], self.actions[indices], self.rewards[indices], self.done[indices]
+        return (
+            self.states[indices].squeeze(),
+            self.next_states[indices].squeeze(),
+            self.actions[indices].squeeze(),
+            self.rewards[indices].squeeze(),
+            self.done[indices].squeeze()
+        )
