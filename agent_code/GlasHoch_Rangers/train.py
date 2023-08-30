@@ -71,7 +71,10 @@ class RewardHandler:
 
         reward = 0
         for event in events:
-            reward += self.REWARD_CONFIG[event]
+            try:
+                reward += self.REWARD_CONFIG[event]
+            except:
+                print(f"No reward defined for event {event}")
 
 
         """

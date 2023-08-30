@@ -83,6 +83,9 @@ class Agent():
 
         self.REWARD_CONFIG = REWARD_CONFIG
 
+        if AGENT_CONFIG["load"] == True: # load model :D
+            self.load(AGENT_CONFIG["load_path"])
+
     def learn(self):
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
@@ -160,6 +163,34 @@ class Agent():
         if self.curr_step % self.save_every != 0:
             return
         save_path = (
-                self.save_dir + f"/agent_{int(self.curr_step // self.save_every)}.pth"
+                self.save_dir + f"/agent_{int(self.curr_step)}.pth"
         )
         torch.save(self.net.state_dict(), save_path)
+
+    def load(self, model_path):
+        try:
+
+            model_path = "./models/" +  model_path
+            saved_state_dict = torch.load(model_path)
+            model_state_dict = self.net.state_dict()
+
+            # Map saved keys to current model keys
+            mapped_state_dict = {}
+            for saved_key, saved_value in saved_state_dict.items():
+                if saved_key in model_state_dict:
+                    mapped_state_dict[saved_key] = saved_value
+
+            # Load mapped state dictionary
+            self.net.load_state_dict(mapped_state_dict)
+            self.sync_Q_target()  # Sync the target network with the loaded model's parameters
+
+            print(f"Pretrained model loaded from {model_path}")
+
+            # Sync the online network with the loaded model's parameters
+            self.net.online.load_state_dict(self.net.state_dict())
+            print("Online network synced with the loaded model's parameters")
+        except:
+            print("model not loaded due to error, for now just start new since I am to tired to fix it :P")
+            pass
+
+
