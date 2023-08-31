@@ -2,7 +2,7 @@ AGENT_CONFIG:
   agent_name: GlasHoch_Rangers
   config_name: default
   state_dim: [8, 9, 9]
-  action_dim: 6
+  action_dim: 5
   batch_size: 1
   memory_size: 1000
   burnin: 5
@@ -14,7 +14,7 @@ AGENT_CONFIG:
   exploration_rate: 0.4
   exploration_rate_decay: 0.999
   exploration_rate_min: 0.025
-  load: True
+  load: False
   load_path: ./models/GlasHoch_Rangers_default_47000.pth
   learning_rate: 0.00025
   lr_scheduler_step: 1000

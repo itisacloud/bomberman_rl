@@ -11,7 +11,7 @@ EVENTS = ['WAITED', 'MOVED_UP', 'MOVED_DOWN', 'MOVED_LEFT', 'MOVED_RIGHT', 'INVA
           'BOMB_DROPPED', 'COIN_FOUND', 'SURVIVED_ROUND']
 
 move_events = ['MOVED_UP', 'MOVED_DOWN', 'MOVED_LEFT', 'MOVED_RIGHT']
-actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
+actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT']
 moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 
 
