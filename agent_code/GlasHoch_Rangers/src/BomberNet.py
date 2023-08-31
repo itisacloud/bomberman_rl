@@ -126,6 +126,9 @@ class Agent():
 
         return (td_est.mean().item(), loss)
 
+
+    # the follwoing four functions are from the tutorial and only slightly modified, is this allowed?
+
     def update_Q_online(self, td_estimate, td_target):
         loss = self.loss_fn(td_estimate, td_target)
         self.optimizer.zero_grad()
@@ -142,7 +145,6 @@ class Agent():
         ]  # Q_online(s,a)
         return current_Q
 
-    # tutorial with Double DQN
     @torch.no_grad()
     def td_target(self, reward, next_state, done):
         next_state_Q_online = self.net(next_state, model="online")

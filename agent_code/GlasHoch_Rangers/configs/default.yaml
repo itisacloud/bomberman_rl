@@ -17,8 +17,8 @@ AGENT_CONFIG:
   load: True
   load_path: ./models/GlasHoch_Rangers_default_47000.pth
   learning_rate: 0.00025
-  lr_scheduler_step: 1000  # Adjust as needed
-  lr_scheduler_gamma: 0.9  # Adjust as needed
+  lr_scheduler_step: 1000
+  lr_scheduler_gamma: 0.9
   exploration_method: epsilon-greedy
 
 REWARD_CONFIG:
