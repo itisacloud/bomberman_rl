@@ -55,6 +55,9 @@ class Agent():
 
         self.training= training
 
+        self.agent_name = AGENT_CONFIG["agent_name"]
+        self.config_name = AGENT_CONFIG["config_name"]
+
         self.exploration_rate_min = AGENT_CONFIG["exploration_rate_min"]
         self.exploration_rate_decay = AGENT_CONFIG["exploration_rate_decay"]
         self.exploration_rate = AGENT_CONFIG["exploration_rate"]
@@ -176,7 +179,7 @@ class Agent():
         if self.curr_step % self.save_every != 0:
             return
         save_path = (
-                self.save_dir + f"/agent_{int(self.curr_step)}.pth"
+                self.save_dir + f"/{self.agent_name}_{self.config_name}_{int(self.curr_step)}.pth"
         )
         torch.save(self.net.state_dict(), save_path)
 
@@ -189,7 +192,7 @@ class Agent():
             print(f"Model file not found at {model_path}. Cannot load the model.")
             return
 
-        self.net.load_state_dict(torch.load(model_path))
+        self.net.load_state_dict(torch.load(model_path,map_location=torch.device(self.device)))
         self.sync_Q_target()  # Sync the target network with the loaded model's parameters
 
 

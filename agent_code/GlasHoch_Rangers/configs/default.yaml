@@ -1,4 +1,6 @@
 AGENT_CONFIG:
+  agent_name: GlasHoch_Rangers
+  config_name: default
   state_dim: [8, 9, 9]
   action_dim: 6
   batch_size: 1
@@ -12,21 +14,21 @@ AGENT_CONFIG:
   exploration_rate: 0.4
   exploration_rate_decay: 0.999
   exploration_rate_min: 0.025
-  load: False
-  load_path: ./models/agent_50500.pth
+  load: Fasle
+  load_path: ./models/agent_9500.pth
   learning_rate: 0.00025
   lr_scheduler_step: 1000  # Adjust as needed
   lr_scheduler_gamma: 0.9  # Adjust as needed
   exploration_method: epsilon-greedy
 
 REWARD_CONFIG:
-  MOVED_LEFT: 0
-  MOVED_RIGHT: 0
-  MOVED_UP: 0
-  MOVED_DOWN: 0
-  WAITED: -2
-  INVALID_ACTION: -100
-  BOMB_DROPPED: 1
+  MOVED_LEFT: 1
+  MOVED_RIGHT: 1
+  MOVED_UP: 1
+  MOVED_DOWN: 1
+  WAITED: -10
+  INVALID_ACTION: -1
+  BOMB_DROPPED: -10
   BOMB_EXPLODED: 1
   CRATE_DESTROYED: 1
   COIN_FOUND: 5
