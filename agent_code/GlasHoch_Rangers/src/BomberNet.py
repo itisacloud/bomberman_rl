@@ -83,14 +83,21 @@ class Agent():
         self.gamma = AGENT_CONFIG["gamma"]
 
         # discount factor
-        self.loss_fn = torch.nn.SmoothL1Loss()
+        if AGENT_CONFIG["loss_fn"] == "MSE":
+            self.loss_fn = torch.nn.MSELoss()
+        elif AGENT_CONFIG["loss_fn"] == "SmoothL1":
+            self.loss_fn = torch.nn.SmoothL1Loss()
+        else:
+            raise ValueError("loss_fn must be either MSE or SmoothL1")
 
-        self.lr_scheduler_step = AGENT_CONFIG["lr_scheduler_step"]
-        self.lr_scheduler_gamma = AGENT_CONFIG["lr_scheduler_gamma"]
+        # optimizer
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=AGENT_CONFIG["learning_rate"])
 
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=0.00025)
-        self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=self.lr_scheduler_step,
-                                                            gamma=self.lr_scheduler_gamma)
+        if AGENT_CONFIG["lr_scheduler"] == True: #implement lr scheduler later
+            self.lr_scheduler_step = AGENT_CONFIG["lr_scheduler_step"]
+            self.lr_scheduler_gamma = AGENT_CONFIG["lr_scheduler_gamma"]
+            self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=self.lr_scheduler_step,
+                                                                gamma=self.lr_scheduler_gamma)
 
         self.memory = Memory(AGENT_CONFIG["state_dim"],self.memory_size)
 

@@ -20,6 +20,7 @@ def setup(self):
     self.REWARD_CONFIG = configs["REWARD_CONFIG"]
     self.agent = Agent(self.AGENT_CONFIG, self.REWARD_CONFIG, training=self.train)
     self.state_processor = State(window_size=int((self.AGENT_CONFIG["state_dim"][1] - 1) / 2))
+    self.draw_plot = self.AGENT_CONFIG["draw_plot"]
 
 def act(self, game_state: dict) -> str:
     features = self.state_processor.getFeatures(game_state)
