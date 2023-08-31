@@ -4,12 +4,13 @@ class Memory:
     def __init__(self, input_dim: tuple[int, int, int], size: int):
         self.size = size
         self.index = 0
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.states = torch.zeros((size, *input_dim), dtype=torch.float32)
-        self.next_states = torch.zeros((size, *input_dim), dtype=torch.float32)
-        self.actions = torch.zeros((size), dtype=torch.int32)
-        self.rewards = torch.zeros((size), dtype=torch.int32)
-        self.done = torch.zeros((size), dtype=torch.bool)
+        self.states = torch.zeros((size, *input_dim), dtype=torch.float32).to(self.device)
+        self.next_states = torch.zeros((size, *input_dim), dtype=torch.float32).to(self.device)
+        self.actions = torch.zeros((size), dtype=torch.int32).to(self.device)
+        self.rewards = torch.zeros((size), dtype=torch.int32).to(self.device)
+        self.done = torch.zeros((size), dtype=torch.bool).to(self.device)
 
     def cache(self, state: torch.Tensor, next_state: torch.Tensor, action: int, reward: int, done: bool):
         if self.index >= self.size:
@@ -27,9 +28,9 @@ class Memory:
         torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         indices = torch.randint(0, self.size, (batch_size,))
         return (
-            self.states[indices].squeeze(),
-            self.next_states[indices].squeeze(),
-            self.actions[indices].squeeze(),
-            self.rewards[indices].squeeze(),
-            self.done[indices].squeeze()
+            self.states[indices].squeeze().to(self.device),
+            self.next_states[indices].squeeze().to(self.device),
+            self.actions[indices].squeeze().to(self.device),
+            self.rewards[indices].squeeze().to(self.device),
+            self.done[indices].squeeze().to(self.device)
         )

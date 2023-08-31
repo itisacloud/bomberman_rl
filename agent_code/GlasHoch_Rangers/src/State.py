@@ -5,9 +5,11 @@ import torch
 
 
 class State:
-    def __init__(self, window_size):
+    def __init__(self, window_size,enemies=0):
         self.window_size = window_size
         self.new_round()
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.enemies = enemies
 
     def new_round(self):
         self.bomb_timeout = {}
@@ -28,10 +30,14 @@ class State:
 
     def extra_to_map(self,extra_features,field):
         maps = []
+
+
         for feature in extra_features:
-            if feature == 0:
+            if feature == 0 or feature == False:
                 maps.append(np.zeros_like(field))
             else:
+                if feature == True:
+                    feature = 1
                 maps.append(np.ones_like(field)*feature)
         return np.array(maps)
 
@@ -158,7 +164,6 @@ class State:
 
     def getFeatures(self, game_state):
         # get features
-
         self.current_step += 1
 
         field = game_state['field']
@@ -172,11 +177,13 @@ class State:
 
         others = game_state['others']
 
+        self.enemies = max(self.enemies,len(others))
+
         enemies_pos = [i[3] for i in others]
         enemies_bomb = [i[2] for i in others]
 
-        bomb_pos = [i[0] for i in bomb]
-        bomb_timer = [i[1] for i in bomb]
+        if len(enemies_bomb) < self.enemies:
+            enemies_bomb += [False for _ in range(self.enemies-len(enemies_bomb))]
 
         explosion_map = self.get_explosion_map(field, bomb)
 
@@ -190,7 +197,7 @@ class State:
         for pos in coins:
             coins_pos_map[pos[1], pos[0]] = 1
 
-        coins_id_map = self.paths_to_idw_matrix(field, [self.a_star(field, agent_pos, coin) for coin in coins])
+        coins_idw_map = self.paths_to_idw_matrix(field, [self.a_star(field, agent_pos, coin) for coin in coins])
 
 
         moveable_fields = self.get_movable_fields(field, explosion_map, bomb, enemies_pos)
@@ -203,8 +210,14 @@ class State:
         enemies_pos_map = self.window(enemies_pos_map, agent_pos, self.window_size, constant=0)
         moveable_fields = self.window(moveable_fields, agent_pos, self.window_size, constant=-1)
         reachabel_fields = self.window(reachabel_fields, agent_pos, self.window_size, constant=0)
+        coins_idw_map = self.window(coins_idw_map, agent_pos, self.window_size, constant=0)
 
-        features = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,moveable_fields,reachabel_fields]) # get features
-        #extra_feautres = np.concatenate([self.extra_to_map(feautres,field) for features in [has_bomb, *bomb_timer, *enemies_bomb]])# get extra features
-        features = torch.tensor(features).to(torch.float32)
+        extra_features = [has_bomb, enemies_bomb]
+
+
+
+        features = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,moveable_fields,reachabel_fields,coins_idw_map,*self.extra_to_map([has_bomb, *enemies_bomb],reachabel_fields)]) # get features
+
+        features = torch.tensor(features).to(torch.float32).to(self.device)
+
         return features#,extra_feautres

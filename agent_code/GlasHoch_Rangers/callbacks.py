@@ -22,6 +22,8 @@ def setup(self):
 
 
     self.agent = Agent(self.AGENT_CONFIG, self.REWARD_CONFIG, training=self.train)
+
+
     self.state_processor = State(window_size=int((self.AGENT_CONFIG["state_dim"][1] - 1) / 2))
 
 
