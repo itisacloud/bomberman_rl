@@ -1,12 +1,16 @@
 from collections import namedtuple, defaultdict
 from typing import List
 
+import numpy as np
+
+from .src.State import State
 from .src.cache import Memory
 
 EVENTS = ['WAITED', 'MOVED_UP', 'MOVED_DOWN', 'MOVED_LEFT', 'MOVED_RIGHT', 'INVALID_ACTION',
           'CRATE_DESTROYED', 'COIN_COLLECTED', 'KILLED_SELF', 'KILLED_OPPONENT', 'OPPONENT_ELIMINATED',
           'BOMB_DROPPED', 'COIN_FOUND', 'SURVIVED_ROUND']
 
+move_events = ['MOVED_UP', 'MOVED_DOWN', 'MOVED_LEFT', 'MOVED_RIGHT']
 actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
 moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 
@@ -58,16 +62,29 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
     self.agent.save()
 
+    self.reward_handler.new_round()
+
 
     # todo save model
 
 
 class RewardHandler:
     def __init__(self, REWARD_CONFIG: str):
+        self.state_processor = State(window_size=1) #maybe move the distance function to utils or something
         self.REWARD_CONFIG = REWARD_CONFIG
+        self.previous_positions = None
+    def new_round(self):
+        self.previous_positions = None
 
     def reward_from_state(self, new_game_state,old_game_state, new_features, old_features, events) -> int:
+        if self.previous_positions is None:
+            self.previous_positions = np.zeros_like(new_game_state["field"])
+
+
         own_position = old_game_state["self"][3]
+
+        own_move = np.array(new_game_state["self"][3]) - np.array(old_game_state["self"][3])
+
         enemy_positions = [enemy[3] for enemy in old_game_state["others"]]
 
         reward = 0
@@ -78,8 +95,24 @@ class RewardHandler:
             except:
                 print(f"No reward defined for event {event}")
 
-        """
-        if "BOMB_DROPPED" in events and min(
-                [self.state_processor.distance(own_position, enemy) for enemy in enemy_positions]) < 3:
-            reward += self.bomb_reward(new_features, old_features)"""
+
+        try:
+
+            if "BOMB_DROPPED" in events and min([self.state_processor.distance(own_position, enemy) for enemy in enemy_positions]) < 3:
+                reward += self.REWARD_CONFIG["BOMB_NEAR_ENEMY"]
+                if min([self.state_processor.distance(own_position, enemy) for enemy in enemy_positions]) < 1:
+                    reward += self.REWARD_CONFIG["BOMB_NEAR_ENEMY"] * 2
+        except:
+            pass
+        center = [int(old_features.shape[1]-1)/2,int(old_features.shape[2]-1)/2]
+
+        if sum(own_move) != 0:
+            if max([old_features[5][int(center[0]+pos[0])][int(center[1] + pos[1])] for pos in moves]) == old_features[5][int(center[0]+own_move[0]),int(center[1]+own_move[1])]:
+                reward += self.REWARD_CONFIG["MOVED_TOWARDS_COIN_CLUSTER"]
+
+        self.previous_positions[own_position[0],own_position[1]] += 1
+
+        if self.previous_positions[own_position[0],own_position[1]] > 1:
+            reward += self.REWARD_CONFIG["ALREADY_VISITED"] * self.previous_positions[own_position[0],own_position[1]] #scale this shit
+
         return reward

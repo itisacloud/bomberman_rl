@@ -27,7 +27,9 @@ def setup(self):
     self.state_processor = State(window_size=int((self.AGENT_CONFIG["state_dim"][1] - 1) / 2))
 
 
+
 def act(self, game_state: dict) -> str:
     features = self.state_processor.getFeatures(game_state)
     self.agent.act(features)
+
     return actions[self.agent.act(features)]

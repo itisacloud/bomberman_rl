@@ -14,8 +14,8 @@ AGENT_CONFIG:
   exploration_rate: 0.4
   exploration_rate_decay: 0.999
   exploration_rate_min: 0.025
-  load: Fasle
-  load_path: ./models/agent_9500.pth
+  load: True
+  load_path: ./models/GlasHoch_Rangers_default_47000.pth
   learning_rate: 0.00025
   lr_scheduler_step: 1000  # Adjust as needed
   lr_scheduler_gamma: 0.9  # Adjust as needed
@@ -36,7 +36,6 @@ REWARD_CONFIG:
   KILLED_OPPONENT: 10
   KILLED_SELF: -5
   GOT_KILLED: -10
-  ALREADY_VISITED: -2
   MOVED_TOWARDS_COIN_CLUSTER: 2
   MOVED_TOWARDS_ENEMY: 1
   TRAPPED_ENEMY: 5
@@ -45,3 +44,4 @@ REWARD_CONFIG:
   BOMB_NEXT_TO_ENEMY: 5
   OPPONENT_ELIMINATED: 1
   SURVIVED_ROUND: 10
+  ALREADY_VISITED: -2
