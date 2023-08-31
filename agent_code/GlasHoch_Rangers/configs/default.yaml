@@ -5,9 +5,9 @@ AGENT_CONFIG:
   action_dim: 5
   batch_size: 1
   memory_size: 1000
-  burnin: 5
-  learn_evry: 1
-  sync_evry: 100
+  burnin: 1000
+  learn_evry: 100
+  sync_evry: 1000
   gamma: 0.95
   save_every: 500
   curr_step: 0
