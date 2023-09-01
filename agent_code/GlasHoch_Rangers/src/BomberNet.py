@@ -10,7 +10,7 @@ from .cache import Memory
 
 
 
-class DQNetwork(nn.Module):
+class BomberNet(nn.Module):
     def __init__(self, input_dim, output_dim):
         super().__init__()
         c, h, w = input_dim
@@ -42,12 +42,15 @@ class DQNetwork(nn.Module):
             p.requires_grad = False
 
     def forward(self, input, model):
-        input = input.unsqueeze(0)
 
+        input = input.unsqueeze(0)
+        if len(input.shape) == 5:
+            input = input.squeeze(0) # this feels wrong but it works
         if model == "online":
             return self.online(input)
         elif model == "target":
             return self.target(input)
+
 
 
 class Agent():
@@ -73,7 +76,7 @@ class Agent():
         self.save_dir = "./models"
 
         # setting up the network
-        self.net = DQNetwork(input_dim=self.state_dim,output_dim=self.action_dim).float()
+        self.net = BomberNet(input_dim=self.state_dim, output_dim=self.action_dim).float()
         self.net.to(self.device)
 
         self.burnin = AGENT_CONFIG["burnin"]  # min. experiences before training
