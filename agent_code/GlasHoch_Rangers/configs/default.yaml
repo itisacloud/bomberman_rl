@@ -7,7 +7,7 @@ AGENT_CONFIG:
   memory_size: 10000
   burnin: 1000
   learn_evry: 100
-  sync_evry: 1000
+  sync_evry: 10000
   gamma: 0.95
   save_every: 10000
   curr_step: 0
@@ -15,14 +15,14 @@ AGENT_CONFIG:
   exploration_rate_decay: 0.999
   exploration_rate_min: 0.025
   load: True
-  load_path: ./models/GlasHoch_Rangers_default_163500.pth
+  load_path: ./models/GlasHoch_Rangers_default_200000.pth
   learning_rate: 0.00025
   lr_scheduler_step: 1000
   lr_scheduler_gamma: 0.9
   exploration_method: epsilon-greedy
   loss_fn: MSE
   lr_scheduler: True
-  draw_plot: True
+  draw_plot: False
 
 REWARD_CONFIG:
   MOVED_LEFT: 0
@@ -32,8 +32,8 @@ REWARD_CONFIG:
   WAITED: -10
   INVALID_ACTION: -1
   BOMB_DROPPED: -10
-  BOMB_EXPLODED: 1
-  CRATE_DESTROYED: 1
+  BOMB_EXPLODED: 0
+  CRATE_DESTROYED: 0
   COIN_FOUND: 5
   COIN_COLLECTED: 10
   KILLED_OPPONENT: 10

@@ -168,16 +168,18 @@ class Agent():
         return td_targets
 
     def act(self,features):
-        if self.exploration_method == "epsilon-greedy":
+        if self.exploration_method == "epsilon-greedy" and self.training == True:
             if np.random.rand() < self.exploration_rate:
                 action_idx = np.random.randint(self.action_dim)
             else:
                 action_values = self.net(features, model="online")
                 action_idx = torch.argmax(action_values, axis=1).item()
-        elif self.exploration_method == "boltzmann":
+        elif self.exploration_method == "boltzmann" and self.training == True:
             action_values = self.net(features, model="online")
             probabilities = torch.softmax(action_values / self.temperature, dim=-1)
             action_idx = torch.multinomial(probabilities, 1).item()
+        else:
+            raise ValueError("exploration_method must be epsilon-greedy or boltzmann")
 
         self.exploration_rate *= self.exploration_rate_decay
         self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
