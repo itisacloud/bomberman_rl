@@ -2,7 +2,9 @@ import torch
 
 class Memory:
     def __init__(self, input_dim: tuple[int, int, int], size: int):
+        print("Memory")
         self.size = size
+        self.counter = 0
         self.index = 0
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -11,6 +13,7 @@ class Memory:
         self.actions = torch.zeros((size), dtype=torch.int32).to(self.device)
         self.rewards = torch.zeros((size), dtype=torch.int32).to(self.device)
         self.done = torch.zeros((size), dtype=torch.bool).to(self.device)
+
 
     def cache(self, state: torch.Tensor, next_state: torch.Tensor, action: int, reward: int, done: bool):
         if self.index >= self.size:
@@ -23,10 +26,12 @@ class Memory:
         self.done[self.index] = done
 
         self.index += 1
+        self.counter += 1
+
 
     def sample(self, batch_size: int = 1) -> tuple[
         torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        indices = torch.randint(0, self.size, (batch_size,))
+        indices = torch.randint(0, min(self.counter, self.size), (batch_size,))
         return (
             self.states[indices].squeeze().to(self.device),
             self.next_states[indices].squeeze().to(self.device),

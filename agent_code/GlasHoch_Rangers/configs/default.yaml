@@ -1,20 +1,20 @@
 AGENT_CONFIG:
   agent_name: GlasHoch_Rangers
   config_name: default
-  state_dim: [8, 9, 9]
-  action_dim: 5
+  state_dim: [8, 11, 11]
+  action_dim: 6
   batch_size: 32
   memory_size: 10000
   burnin: 1000
-  learn_evry: 100
-  sync_evry: 10000
+  learn_evry: 10
+  sync_evry: 1000
   gamma: 0.95
-  save_every: 10000
+  save_every: 100000
   curr_step: 0
-  exploration_rate: 0.4
-  exploration_rate_decay: 0.999
-  exploration_rate_min: 0.025
-  load: True
+  exploration_rate: 1.0
+  exploration_rate_decay: 0.9995
+  exploration_rate_min: 0.05
+  load: False
   load_path: ./models/GlasHoch_Rangers_default_200000.pth
   learning_rate: 0.00025
   lr_scheduler_step: 1000
@@ -22,22 +22,23 @@ AGENT_CONFIG:
   exploration_method: epsilon-greedy
   loss_fn: MSE
   lr_scheduler: True
-  draw_plot: False
+  draw_plot: True
+  draw_plot_every: 1000
 
 REWARD_CONFIG:
-  MOVED_LEFT: 0
-  MOVED_RIGHT: 0
-  MOVED_UP: 0
-  MOVED_DOWN:  0
+  MOVED_LEFT: 1
+  MOVED_RIGHT: 1
+  MOVED_UP: 1
+  MOVED_DOWN:  1
   WAITED: -10
-  INVALID_ACTION: -1
-  BOMB_DROPPED: -10
+  INVALID_ACTION: -10
+  BOMB_DROPPED: 2
   BOMB_EXPLODED: 0
-  CRATE_DESTROYED: 0
+  CRATE_DESTROYED: 5
   COIN_FOUND: 5
   COIN_COLLECTED: 10
   KILLED_OPPONENT: 10
-  KILLED_SELF: -5
+  KILLED_SELF: -50
   GOT_KILLED: -10
   MOVED_TOWARDS_COIN_CLUSTER: 2
   MOVED_TOWARDS_ENEMY: 1
@@ -46,4 +47,4 @@ REWARD_CONFIG:
   BOMB_NEAR_ENEMY: 3
   OPPONENT_ELIMINATED: 1
   SURVIVED_ROUND: 10
-  ALREADY_VISITED: -2
+  ALREADY_VISITED: -0.5

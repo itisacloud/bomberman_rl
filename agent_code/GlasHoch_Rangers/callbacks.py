@@ -6,7 +6,7 @@ import yaml
 from .src.BomberNet import Agent
 from agent_code.GlasHoch_Rangers.src.State import State
 
-actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT']
+actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
 
 
 def setup(self):
@@ -24,6 +24,5 @@ def setup(self):
 
 def act(self, game_state: dict) -> str:
     features = self.state_processor.getFeatures(game_state)
-    self.agent.act(features)
 
     return actions[self.agent.act(features)]

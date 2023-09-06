@@ -13,28 +13,23 @@ from .cache import Memory
 class BomberNet(nn.Module):
     def __init__(self, input_dim, output_dim):
         super().__init__()
+
         c, h, w = input_dim
 
         self.online = nn.Sequential(
-            nn.Conv2d(in_channels=c, out_channels=64, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=c, out_channels=64, kernel_size=3, stride=1, padding=2),
             nn.ReLU(),
-            nn.Dropout(0.2),  # Adding Dropout layer
-            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=7, stride=1, padding=2),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2),
             nn.Flatten(),
-            nn.Linear(512 * (h // 4) * (w // 4), 1024),
-            nn.ReLU(),
-            nn.Dropout(0.5),  # Adding Dropout layer
-            nn.Linear(1024, 512),
+            nn.Linear(128 * (h // 2) * (w // 2), 512),  # Adjusted input size for the linear layer
             nn.ReLU(),
             nn.Linear(512, output_dim)
         )
+
         self.target = copy.deepcopy(self.online)
 
         # Q_target parameters are frozen.
@@ -103,13 +98,12 @@ class Agent():
                                                                 gamma=self.lr_scheduler_gamma)
 
         self.memory = Memory(AGENT_CONFIG["state_dim"],self.memory_size)
-
         self.REWARD_CONFIG = REWARD_CONFIG
 
         if AGENT_CONFIG["load"] == True: # load model :D
             self.load(AGENT_CONFIG["load_path"])
 
-    def learn(self):
+    def learn(self,memory):
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
 
@@ -122,7 +116,7 @@ class Agent():
         if self.curr_step % self.learn_every != 0:
             return None, None
 
-        new_state, old_state, action, reward, done = self.memory.sample(self.batch_size)
+        new_state, old_state, action, reward, done = memory.sample(self.batch_size)
 
 
         # Get TD Estimate
@@ -136,9 +130,7 @@ class Agent():
 
         return (td_est.mean().item(), loss)
 
-
     # the follwoing four functions are from the tutorial and only slightly modified, is this allowed?
-
     def update_Q_online(self, td_estimate, td_target):
         loss = self.loss_fn(td_estimate, td_target)
         self.optimizer.zero_grad()
@@ -164,7 +156,6 @@ class Agent():
         next_Q_values = next_state_Q_target[np.arange(0, self.batch_size), best_action_online]
 
         td_targets = (reward + (1 - done.float()) * self.gamma * next_Q_values).float()
-
         return td_targets
 
     def act(self,features):
@@ -199,8 +190,7 @@ class Agent():
 
     def load(self, model_path):
         print(model_path)
-        print(os.path.abspath(model_path)
-)
+        print(os.path.abspath(model_path))
 
         if not Path(model_path).is_file():
             print(f"Model file not found at {model_path}. Cannot load the model.")

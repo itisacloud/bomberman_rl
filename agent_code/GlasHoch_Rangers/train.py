@@ -1,5 +1,5 @@
 from collections import namedtuple, defaultdict
-from typing import List
+from typing import List, DefaultDict
 
 import numpy as np
 
@@ -13,26 +13,38 @@ EVENTS = ['WAITED', 'MOVED_UP', 'MOVED_DOWN', 'MOVED_LEFT', 'MOVED_RIGHT', 'INVA
           'BOMB_DROPPED', 'COIN_FOUND', 'SURVIVED_ROUND']
 
 move_events = ['MOVED_UP', 'MOVED_DOWN', 'MOVED_LEFT', 'MOVED_RIGHT']
-actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT']
+actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',  'BOMB']
 moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 
 
 class plot:
     def __init__(self, loss_update_interval=1000, max_steps_to_plot=10000):
         self.loss_history = []
+        self.games = [0]
         self.steps = []
         self.loss_update_interval = loss_update_interval
         self.max_steps_to_plot = max_steps_to_plot  # Maximum number of steps to plot
         plt.ion()
-        self.fig, self.ax = plt.subplots()
+        self.fig, self.axs = plt.subplots(2)
+        self.ax = self.axs[0]
+        self.ax_1 = self.axs[1]
         self.loss_plot, = self.ax.plot([], [], label='Loss')
         self.ax.set_xlabel('Training Steps')
         self.ax.set_ylabel('Loss')
         self.ax.legend()
+        self.steps_per_game_plot, = self.ax_1.plot([], [], label='Steps per game')
+        self.ax_1.set_xlabel('game')
+        self.ax_1.set_ylabel('Steps per game')
+
+
 
     def append(self, loss):
         self.loss_history.append(loss)
         self.steps.append(len(self.loss_history))
+
+    def append_game(self):
+        self.games.append(self.steps[-1])
+
 
     def update(self):
         if self.steps[-1] % self.loss_update_interval == 0:
@@ -44,7 +56,16 @@ class plot:
             self.loss_plot.set_data(self.steps[start_index:], self.loss_history[start_index:])
             self.ax.relim()  # Recalculate limits
             self.ax.autoscale_view(True, True, True)  # Autoscale the view
+            self.steps_per_game = [game - self.games[i - 1] for i, game in enumerate(self.games) if i > 0]
+
+            self.steps_per_game_plot.set_data(range(len(self.steps_per_game)), self.steps_per_game)
+            self.ax_1.relim()  # Recalculate limits
+            self.ax_1.autoscale_view(True, True, True)  # Autoscale the view
+
+
             plt.pause(0.1)
+
+
 
 
 def setup_training(self):
@@ -58,7 +79,7 @@ def setup_training(self):
     self.loss_history = []  # To keep track of loss during training
     self.loss_update_interval = 10  # Update the plot every 10 steps
     if self.draw_plot:
-        self.plot = plot()
+        self.plot = plot(loss_update_interval=self.AGENT_CONFIG["draw_plot_evry"])
 
 
 def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_state: dict, events: List[str]):
@@ -68,11 +89,10 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
 
     own_action = int(actions.index(own_action))
     reward = self.reward_handler.reward_from_state(new_game_state, old_game_state, new_features, old_features, events)
-
     done = False
-
     self.memory.cache(old_features, new_features, own_action, reward, done)
-    td_estimate, loss = self.agent.learn()
+
+    td_estimate, loss = self.agent.learn(self.memory)
 
     for event in events:
         self.past_events_count[event] += 1
@@ -80,7 +100,7 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
     self.past_movements[own_action] += 1
 
     if self.draw_plot:
-        self.plot.append(loss)
+        self.plot.append(reward)
         self.plot.update()
 
 
@@ -92,7 +112,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
     done = True
     self.memory.cache(features, features, own_action, reward, done)
-    td_estimate, loss = self.agent.learn()
+    td_estimate, loss = self.agent.learn(self.memory)
 
     for event in events:
         self.past_events_count[event] += 1
@@ -100,6 +120,8 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     self.past_movements[own_action] += 1
 
     self.agent.save()
+
+    self.plot.append_game()
 
     self.reward_handler.new_round()
 
@@ -110,21 +132,15 @@ class RewardHandler:
     def __init__(self, REWARD_CONFIG: str):
         self.state_processor = State(window_size=1)  # maybe move the distance function to utils or something
         self.REWARD_CONFIG = REWARD_CONFIG
-        self.previous_positions = None
+        self.previous_positions = defaultdict(int)
 
     def new_round(self):
-        self.previous_positions = None
+        self.previous_positions = defaultdict(int)
 
     def reward_from_state(self, new_game_state, old_game_state, new_features, old_features, events) -> int:
-        if self.previous_positions is None:
-            self.previous_positions = np.zeros_like(new_game_state["field"])
-
         own_position = old_game_state["self"][3]
-
         own_move = np.array(new_game_state["self"][3]) - np.array(old_game_state["self"][3])
-
         enemy_positions = [enemy[3] for enemy in old_game_state["others"]]
-
         reward = 0
 
         for event in events:
@@ -134,7 +150,6 @@ class RewardHandler:
                 print(f"No reward defined for event {event}")
 
         try:
-
             if "BOMB_DROPPED" in events and min(
                     [self.state_processor.distance(own_position, enemy) for enemy in enemy_positions]) < 3:
                 reward += self.REWARD_CONFIG["BOMB_NEAR_ENEMY"]
@@ -142,6 +157,8 @@ class RewardHandler:
                     reward += self.REWARD_CONFIG["BOMB_NEAR_ENEMY"] * 2
         except:
             pass
+
+
         center = [int(old_features.shape[1] - 1) / 2, int(old_features.shape[2] - 1) / 2]
 
         if sum(own_move) != 0:
@@ -149,10 +166,10 @@ class RewardHandler:
                     old_features[5][int(center[0] + own_move[0]), int(center[1] + own_move[1])]:
                 reward += self.REWARD_CONFIG["MOVED_TOWARDS_COIN_CLUSTER"]
 
+        """
         self.previous_positions[own_position[0], own_position[1]] += 1
 
         if self.previous_positions[own_position[0], own_position[1]] > 1:
             reward += self.REWARD_CONFIG["ALREADY_VISITED"] * self.previous_positions[
-                own_position[0], own_position[1]]  # scale this shit
-
+                own_position[0], own_position[1]]  # scale this shit        """
         return reward
