@@ -150,9 +150,7 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
     reward = self.reward_handler.reward_from_state(new_game_state, old_game_state, new_features, old_features, events)
     done = False
     self.memory.cache(old_features, new_features, own_action, reward, done)
-
     td_estimate, loss = self.agent.learn(self.memory)
-
     for event in events:
         self.past_events_count[event] += 1
 

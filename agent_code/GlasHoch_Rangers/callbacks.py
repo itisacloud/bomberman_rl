@@ -8,7 +8,6 @@ from agent_code.GlasHoch_Rangers.src.State import State
 
 actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
 
-
 def setup(self):
     np.random.seed(42)
 
