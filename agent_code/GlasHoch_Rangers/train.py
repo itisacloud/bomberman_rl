@@ -227,10 +227,9 @@ class RewardHandler:
                     old_features[5][int(center[0] + own_move[0]), int(center[1] + own_move[1])]:
                 reward += self.REWARD_CONFIG["MOVED_TOWARDS_COIN_CLUSTER"]
 
-        """
         self.previous_positions[own_position[0], own_position[1]] += 1
 
         if self.previous_positions[own_position[0], own_position[1]] > 1:
             reward += self.REWARD_CONFIG["ALREADY_VISITED"] * self.previous_positions[
-                own_position[0], own_position[1]]  # scale this shit        """
+                own_position[0], own_position[1]]  # push to explore new areas, avoid local maximas
         return reward
