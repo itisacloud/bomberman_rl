@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_Rangers
+  agent_name: GlasHoch_Rangers_imitation
   config_name: default
   state_dim: [11, 9, 9]
   action_dim: 6
@@ -12,15 +12,15 @@ AGENT_CONFIG:
   save_every: 100000
   curr_step: 0
   exploration_rate: 1
-  exploration_rate_decay: 0.9995
+  exploration_rate_decay: 0.999999
   exploration_rate_min: 0.05
   imitation_learning: True
   imitation_learning_rate: 1
-  imitation_learning_decay: 0.9995
-  imitation_learning_min: 0.1
+  imitation_learning_decay: 0.999999
+  imitation_learning_min: 0.2
   imitation_learning_expert: rule_based_agent
-  load: False
-  load_path: /home/clemens/Desktop/Master/BomberMan/bomberman_rl/agent_code/GlasHoch_Rangers/models/GlasHoch_Rangers_default_100000.pth
+  load: True
+  load_path: /home/clemens/Desktop/Master/BomberMan/bomberman_rl/agent_code/GlasHoch_Rangers/models/GlasHoch_Rangers_imitation_default_100000.pth
   learning_rate: 0.00025
   lr_scheduler_step: 1000
   lr_scheduler_gamma: 0.9
