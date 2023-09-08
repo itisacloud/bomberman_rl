@@ -1,6 +1,30 @@
 import torch
+actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
+
+rotated_actions = {
+    0:1,
+    1:2,
+    2:3,
+    3:0,
+    4:4,
+    5:5
+}
+
 
 class Memory:
+    def rotateFeature(self, rots,feature):
+        return torch.rot90(feature, rots, (0, 1))
+
+    def rotateFeatures(self, rots,features):
+        return torch.stack([self.rotateFeature(rots, features[idx]) for idx in range(features.shape[0])])
+
+    def rotateAction(self, rots,action):
+        action = action.clone()
+        for _ in range(rots):
+            action = rotated_actions[int(action)]
+        return torch.tensor(action)  # Convert back to a tensor
+
+
     def __init__(self, input_dim: tuple[int, int, int], size: int):
         print("Memory")
         self.size = size
@@ -32,10 +56,16 @@ class Memory:
     def sample(self, batch_size: int = 1) -> tuple[
         torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         indices = torch.randint(0, min(self.counter, self.size), (batch_size,))
+        rotation = torch.randint(0, 4, (batch_size,))
+
+        rotated_states = torch.stack([self.rotateFeatures(rot, self.states[idx]) for idx, rot in zip(indices, rotation)])
+        rotated_next_states = torch.stack([self.rotateFeatures(rot, self.next_states[idx]) for idx, rot in zip(indices, rotation)])
+        rotated_actions = torch.tensor([self.rotateAction(rot, self.actions[idx]) for idx, rot in zip(indices, rotation)], dtype=torch.int32)
+
         return (
-            self.states[indices].squeeze().to(self.device),
-            self.next_states[indices].squeeze().to(self.device),
-            self.actions[indices].squeeze().to(self.device),
-            self.rewards[indices].squeeze().to(self.device),
-            self.done[indices].squeeze().to(self.device)
+            rotated_states,
+            rotated_next_states,
+            rotated_actions,
+            self.rewards[indices].squeeze(),
+            self.done[indices].squeeze()
         )
