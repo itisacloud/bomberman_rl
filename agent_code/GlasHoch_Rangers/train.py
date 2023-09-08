@@ -181,9 +181,10 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
     self.agent.save()
 
-    self.plot.update_reward_plot(self.total_reward)
+    if self.draw_plot:
+        self.plot.update_reward_plot(self.total_reward)
 
-    self.plot.append_game()
+        self.plot.append_game()
 
     self.reward_handler.new_round()
 
