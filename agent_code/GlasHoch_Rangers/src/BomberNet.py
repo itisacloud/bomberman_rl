@@ -186,7 +186,6 @@ class Agent():
                     try:
                         action_idx = reversed[self.imitation_learning_expert.act(state)]
                     except:
-                        print("fall back")
                         action_idx = np.random.randint(self.action_dim)
                 else:
                     action_idx = np.random.randint(self.action_dim)
@@ -197,8 +196,12 @@ class Agent():
             action_values = self.net(features, model="online")
             probabilities = torch.softmax(action_values / self.temperature, dim=-1)
             action_idx = torch.multinomial(probabilities, 1).item()
-        else:
+        elif self.training:
             raise ValueError("exploration_method must be epsilon-greedy or boltzmann")
+        else:
+            action_values = self.net(features, model="online")
+            action_idx = torch.argmax(action_values, axis=1).item()
+
 
         self.exploration_rate *= self.exploration_rate_decay
         self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)

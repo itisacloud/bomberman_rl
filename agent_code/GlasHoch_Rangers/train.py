@@ -79,7 +79,7 @@ def setup_training(self):
     self.loss_history = []  # To keep track of loss during training
     self.loss_update_interval = 10  # Update the plot every 10 steps
     if self.draw_plot:
-        self.plot = plot(loss_update_interval=self.AGENT_CONFIG["draw_plot_evry"])
+        self.plot = plot(loss_update_interval=self.AGENT_CONFIG["draw_plot_every"])
 
 
 def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_state: dict, events: List[str]):
@@ -157,7 +157,6 @@ class RewardHandler:
                     reward += self.REWARD_CONFIG["BOMB_NEAR_ENEMY"] * 2
         except:
             pass
-
 
         center = [int(old_features.shape[1] - 1) / 2, int(old_features.shape[2] - 1) / 2]
 
