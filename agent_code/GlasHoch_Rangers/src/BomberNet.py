@@ -9,12 +9,6 @@ from torch import nn
 
 from .cache import Memory
 
-from agents import Agent as Expert
-from agents import SequentialAgentBackend
-
-from ...coin_collector_agent import callbacks as coin_collector_agent
-from ...rule_based_agent import callbacks as rule_based_agent
-
 actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
 
 reversed = {"UP": 0,
@@ -148,7 +142,7 @@ class Agent():
 
         # Backpropagate loss through Q_online
         loss = self.update_Q_online(td_est, td_tgt)
-
+        print("learned")
         return (td_est.mean().item(), loss)
 
     # the follwoing four functions are from the tutorial and only slightly modified, is this allowed?

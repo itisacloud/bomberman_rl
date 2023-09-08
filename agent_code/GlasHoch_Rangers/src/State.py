@@ -117,7 +117,7 @@ class State:
                 if (
                         0 <= new_x < len(matrix) and
                         0 <= new_y < len(matrix[0]) and
-                        matrix[new_x][new_y] == 1 and
+                        matrix[new_x][new_y] == 0 and
                         new_pos not in closed_set
                 ):
                     new_cost = cost + 1
@@ -128,12 +128,12 @@ class State:
 
         return None
     def paths_to_idw_matrix(self,field,paths):
-        matrix = np.zeros_like(field)
+        matrix = np.zeros_like(field,dtype=np.float32)
         for path in paths:
             if path is None:
                 continue
-            for i,pos in enumerate(path):
-                matrix[pos[0],pos[1]] += 1 / (i+1)
+            for i,pos_path in enumerate(path):
+                matrix[pos_path[0]][pos_path[1]] += 1 / (i+1)
         return matrix
 
 
@@ -195,8 +195,8 @@ class State:
         for pos in coins:
             coins_pos_map[pos[1], pos[0]] = 1
 
-        coins_idw_map = self.paths_to_idw_matrix(field, [self.a_star(field, agent_pos, coin) for coin in coins])
-
+        paths = [self.a_star(field, agent_pos, coin) for coin in coins]
+        coins_idw_map = self.paths_to_idw_matrix(field, paths)
 
         moveable_fields = self.get_movable_fields(field, explosion_map, bomb, enemies_pos)
         reachabel_fields = self.getReachabelFields(field, moveable_fields, agent_pos, )
@@ -209,8 +209,7 @@ class State:
         enemies_pos_map = self.window(enemies_pos_map, agent_pos, self.window_size, constant=0)
         reachabel_fields = self.window(reachabel_fields, agent_pos, self.window_size, constant=0)
         coins_idw_map = self.window(coins_idw_map, agent_pos, self.window_size, constant=0)
-
-        features = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,reachabel_fields,coins_pos_map,coins_idw_map,*self.extra_to_map([has_bomb, *enemies_bomb],reachabel_fields)]) # get features
+        features = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,reachabel_fields,coins_idw_map,*self.extra_to_map([has_bomb, *enemies_bomb],reachabel_fields)]) # get features
 
         features = torch.tensor(features).to(torch.float32).to(self.device)
 
