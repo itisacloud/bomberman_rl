@@ -1,4 +1,5 @@
 import copy
+import logging
 import os
 from pathlib import Path
 
@@ -8,13 +9,28 @@ from torch import nn
 
 from .cache import Memory
 
+from agents import Agent as Expert
+from agents import SequentialAgentBackend
 
+from ...coin_collector_agent import callbacks as coin_collector_agent
+from ...rule_based_agent import callbacks as rule_based_agent
+
+actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
+
+reversed = {"UP": 0,
+            "RIGHT": 1,
+            "DOWN": 2,
+            "LEFT": 3,
+            "WAIT": 4,
+            "BOMB": 5
+            }
 
 class BomberNet(nn.Module):
-    def __init__(self, input_dim, output_dim):
+    def __init__(self, input_dim, output_dim, precision=torch.float32):
         super().__init__()
 
         c, h, w = input_dim
+
 
         self.online = nn.Sequential(
             nn.Conv2d(in_channels=c, out_channels=64, kernel_size=3, stride=1, padding=2),
@@ -37,7 +53,6 @@ class BomberNet(nn.Module):
             p.requires_grad = False
 
     def forward(self, input, model):
-
         input = input.unsqueeze(0)
         if len(input.shape) == 5:
             input = input.squeeze(0) # this feels wrong but it works
@@ -46,12 +61,10 @@ class BomberNet(nn.Module):
         elif model == "target":
             return self.target(input)
 
-
-
 class Agent():
     def __init__(self,AGENT_CONFIG,REWARD_CONFIG,training):
 
-        self.training= training
+        self.training = training
 
         self.agent_name = AGENT_CONFIG["agent_name"]
         self.config_name = AGENT_CONFIG["config_name"]
@@ -59,10 +72,20 @@ class Agent():
         self.exploration_rate_min = AGENT_CONFIG["exploration_rate_min"]
         self.exploration_rate_decay = AGENT_CONFIG["exploration_rate_decay"]
         self.exploration_rate = AGENT_CONFIG["exploration_rate"]
+
+
+        self.imitation_learning = AGENT_CONFIG["imitation_learning"] # if true, the agent will learn from an expert
+        self.imitation_learning_rate = AGENT_CONFIG["imitation_learning_rate"] #
+        self.imitation_learning_decay = AGENT_CONFIG["imitation_learning_decay"]
+        self.imitation_learning_min = AGENT_CONFIG["imitation_learning_min"]
+        self.imitation_learning_expert = AGENT_CONFIG["imitation_learning_expert"]
+
+        if self.imitation_learning:
+            self.imitation_learning_expert = Expert(self.imitation_learning_expert)
+
         self.state_dim = AGENT_CONFIG["state_dim"]
         self.action_dim = AGENT_CONFIG["action_dim"]
         self.batch_size = AGENT_CONFIG["batch_size"]
-        self.memory_size = AGENT_CONFIG["memory_size"]
         self.save_every = AGENT_CONFIG["save_every"]
         self.curr_step = 0
 
@@ -96,8 +119,6 @@ class Agent():
             self.lr_scheduler_gamma = AGENT_CONFIG["lr_scheduler_gamma"]
             self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=self.lr_scheduler_step,
                                                                 gamma=self.lr_scheduler_gamma)
-
-        self.memory = Memory(AGENT_CONFIG["state_dim"],self.memory_size)
         self.REWARD_CONFIG = REWARD_CONFIG
 
         if AGENT_CONFIG["load"] == True: # load model :D
@@ -142,9 +163,9 @@ class Agent():
         self.net.target.load_state_dict(self.net.online.state_dict())
 
     def td_estimate(self, state, action):
-        current_Q = self.net(state, model="online")[
-            np.arange(0, self.batch_size), action
-        ]  # Q_online(s,a)
+        indices = torch.tensor(np.arange(0, self.batch_size), dtype=torch.long)
+        action_tensor = torch.tensor(action, dtype=torch.long)
+        current_Q = self.net(state, model="online")[indices, action_tensor]
         return current_Q
 
     @torch.no_grad()
@@ -158,10 +179,17 @@ class Agent():
         td_targets = (reward + (1 - done.float()) * self.gamma * next_Q_values).float()
         return td_targets
 
-    def act(self,features):
+    def act(self,features,state = None):
         if self.exploration_method == "epsilon-greedy" and self.training == True:
             if np.random.rand() < self.exploration_rate:
-                action_idx = np.random.randint(self.action_dim)
+                if np.random.rand() < self.imitation_learning_rate and self.imitation_learning:
+                    try:
+                        action_idx = reversed[self.imitation_learning_expert.act(state)]
+                    except:
+                        print("fall back")
+                        action_idx = np.random.randint(self.action_dim)
+                else:
+                    action_idx = np.random.randint(self.action_dim)
             else:
                 action_values = self.net(features, model="online")
                 action_idx = torch.argmax(action_values, axis=1).item()
@@ -174,6 +202,10 @@ class Agent():
 
         self.exploration_rate *= self.exploration_rate_decay
         self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
+
+        self.imitation_learning_rate *= self.imitation_learning_decay
+        self.imitation_learning_rate = max(self.imitation_learning_rate,self.imitation_learning_min)
+
         self.curr_step += 1
         return action_idx
 
@@ -200,4 +232,15 @@ class Agent():
         self.sync_Q_target()  # Sync the target network with the loaded model's parameters
 
 
+class Expert:
+    def __init__(self, name):
+        if name == "rule_based_agent":
+            from ...rule_based_agent import callbacks
+        else:
+            raise ("Unknown Expert defined in config yaml")
 
+        self.logger = logging.getLogger('BombeRLeWorld')
+        self.callbacks = callbacks
+        self.callbacks.setup(self)
+    def act(self, gamestate):
+        return self.callbacks.act(self,gamestate)
