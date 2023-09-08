@@ -28,7 +28,7 @@ AGENT_CONFIG:
   loss_fn: MSE
   lr_scheduler: True
   draw_plot: True
-  draw_plot_every: 1000
+  draw_plot_every: 10
 
 REWARD_CONFIG:
   MOVED_LEFT: 1
