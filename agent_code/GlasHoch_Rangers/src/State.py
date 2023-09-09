@@ -195,21 +195,25 @@ class State:
         for pos in coins:
             coins_pos_map[pos[1], pos[0]] = 1
 
-        paths = [self.a_star(field, agent_pos, coin) for coin in coins]
-        coins_idw_map = self.paths_to_idw_matrix(field, paths)
+        paths_to_coins = [self.a_star(field, agent_pos, coin) for coin in coins]
+        coins_idw_map = self.paths_to_idw_matrix(field, paths_to_coins)
+
+        paths_to_enemies = [self.a_star(field, agent_pos, enemy) for enemy in enemies_pos]
+        enemies_idw_map = self.paths_to_idw_matrix(field, paths_to_enemies)
 
         moveable_fields = self.get_movable_fields(field, explosion_map, bomb, enemies_pos)
         reachabel_fields = self.getReachabelFields(field, moveable_fields, agent_pos, )
-
         # apply windows
+
         field = self.window(field, agent_pos, self.window_size, constant=-2)
-        moveable_fields = self.window(moveable_fields, agent_pos, self.window_size, constant=-2)
         explosion_map = self.window(explosion_map, agent_pos, self.window_size, constant=0)
         coins_pos_map = self.window(coins_pos_map, agent_pos, self.window_size, constant=0)
         enemies_pos_map = self.window(enemies_pos_map, agent_pos, self.window_size, constant=0)
-        reachabel_fields = self.window(reachabel_fields, agent_pos, self.window_size, constant=0)
+        reachabel_fields = self.window(reachabel_fields, agent_pos, self.window_size, constant=-1)
         coins_idw_map = self.window(coins_idw_map, agent_pos, self.window_size, constant=0)
-        features = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,reachabel_fields,coins_idw_map,*self.extra_to_map([has_bomb, *enemies_bomb],reachabel_fields)]) # get features
+        enemies_idw_map = self.window(enemies_idw_map, agent_pos, self.window_size, constant=0)
+
+        features = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,reachabel_fields,coins_idw_map,enemies_idw_map]) # get features
 
         features = torch.tensor(features).to(torch.float32).to(self.device)
 
