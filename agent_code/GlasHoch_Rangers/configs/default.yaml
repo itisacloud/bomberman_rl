@@ -3,7 +3,7 @@ AGENT_CONFIG:
   config_name: default
   state_dim: [7, 9, 9]
   action_dim: 6
-  batch_size: 32
+  batch_size: 64
   memory_size: 10000
   burnin: 5000
   learn_evry: 10
@@ -20,14 +20,15 @@ AGENT_CONFIG:
   imitation_learning_min: 0.2
   imitation_learning_expert: rule_based_agent
   load: False
-  load_path: ./models/GlasHoch_Rangers_imitation_from_checkpoint_600000.pth
-  learning_rate: 0.00025
+  load_path: todo
+  learning_rate: 0.001
   lr_scheduler_step: 1000
-  lr_scheduler_gamma: 0.9
+  lr_scheduler_gamma: 0.99
+  lr_scheduler_min: 0.00025
   exploration_method: epsilon-greedy
   loss_fn: MSE
-  lr_scheduler: True
-  draw_plot: True
+  lr_scheduler: False
+  draw_plot: False
   draw_plot_every: 10
 
 REWARD_CONFIG:
