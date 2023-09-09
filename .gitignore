@@ -111,3 +111,6 @@ screenshots/*.webm
 
 replays/
 results/
+bomberEnv_/
+.vscode/
+my-bomber-output
