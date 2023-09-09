@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from torch import nn
+from torch.nn.parallel import DataParallel  # Import DataParallel
 
 from .cache import Memory
 
@@ -45,6 +46,9 @@ class BomberNet(nn.Module):
         # Q_target parameters are frozen.
         for p in self.target.parameters():
             p.requires_grad = False
+
+        DataParallel(self.online)  # Wrap the online network in DataParallel
+        DataParallel(self.target)  # Wrap the target network in DataParallel
 
     def forward(self, input, model):
         input = input.unsqueeze(0)
@@ -89,7 +93,7 @@ class Agent():
 
         # setting up the network
         self.net = BomberNet(input_dim=self.state_dim, output_dim=self.action_dim).float()
-        self.net.to(self.device)
+        self.net = self.net.to(self.device)
 
         self.burnin = AGENT_CONFIG["burnin"]  # min. experiences before training
         self.learn_every = AGENT_CONFIG["learn_evry"] # no. of experiences between updates to Q_online
@@ -109,6 +113,7 @@ class Agent():
         self.optimizer = torch.optim.Adam(self.net.parameters(), lr=AGENT_CONFIG["learning_rate"])
 
         if AGENT_CONFIG["lr_scheduler"] == True: #implement lr scheduler later
+            self.lr_scheduling = True
             self.lr_scheduler_step = AGENT_CONFIG["lr_scheduler_step"]
             self.lr_scheduler_gamma = AGENT_CONFIG["lr_scheduler_gamma"]
             self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=self.lr_scheduler_step,
@@ -203,7 +208,7 @@ class Agent():
 
         self.imitation_learning_rate *= self.imitation_learning_decay
         self.imitation_learning_rate = max(self.imitation_learning_rate,self.imitation_learning_min)
-        if self.AGENT_CONFIG["lr_scheduler"]:
+        if self.lr_scheduling:
             self.lr_scheduler.step()
             for param_group in self.optimizer.param_groups:
                 param_group['lr'] = max(param_group['lr'], self.lr_scheduler_min)
