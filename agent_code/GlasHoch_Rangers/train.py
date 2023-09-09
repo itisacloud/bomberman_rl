@@ -24,16 +24,18 @@ class plot:
         self.event_history = []
         self.games = [0]
         self.steps = []
+        self.exploration_rate_history = []
         self.loss_update_interval = loss_update_interval
         self.max_steps_to_plot = max_steps_to_plot
         self.running_mean_window = running_mean_window
 
         # Create a figure with subplots
-        self.fig, self.axs = plt.subplots(4, figsize=(10, 12))
+        self.fig, self.axs = plt.subplots(5, figsize=(10, 15))
         self.ax = self.axs[0]
         self.ax_1 = self.axs[1]
         self.ax_2 = self.axs[2]
         self.ax_3 = self.axs[3]
+        self.ax_4 = self.axs[4]
 
         self.loss_plot, = self.ax.plot([], [], label='Loss', color='blue')
         self.ax.set_xlabel('Steps')
@@ -56,18 +58,24 @@ class plot:
         self.ax_3.set_ylabel('Event Counts')
         self.ax_3.set_title('Event Counts')
 
+        self.exploration_rate_plot, = self.ax_4.plot([], [], label='Exploration Rate', color='orange')
+        self.ax_4.set_xlabel('Steps')
+        self.ax_4.set_ylabel('Exploration Rate')
+        self.ax_4.set_title('Exploration Rate')
+        self.ax_4.legend()
+
         self.fig.tight_layout()
 
         plt.ion()
 
 
-    def append(self, loss):
+    def append(self, loss, exploration_rate):
         self.loss_history.append(loss)
         self.steps.append(len(self.loss_history))
+        self.exploration_rate_history.append(exploration_rate)
 
     def append_game(self):
         self.games.append(self.steps[-1])
-
 
     def update(self):
         if self.steps[-1] % self.loss_update_interval == 0:
@@ -80,9 +88,11 @@ class plot:
             self.ax.autoscale_view(True, True, True)
 
             if len(self.loss_history) >= self.running_mean_window:
-                running_mean = np.convolve(self.loss_history, np.ones(self.running_mean_window) / self.running_mean_window,
+                running_mean = np.convolve(self.loss_history,
+                                           np.ones(self.running_mean_window) / self.running_mean_window,
                                            mode='valid')
-                self.ax.plot(self.steps[start_index + self.running_mean_window - 1:], running_mean, label='Running Mean Loss', color='red')
+                self.ax.plot(self.steps[start_index + self.running_mean_window - 1:], running_mean,
+                             label='Running Mean Loss', color='red')
 
             self.steps_per_game = [game - self.games[i - 1] for i, game in enumerate(self.games) if i > 0]
             self.steps_per_game_plot.set_data(range(len(self.steps_per_game)), self.steps_per_game)
@@ -90,10 +100,16 @@ class plot:
             self.ax_1.autoscale_view(True, True, True)
 
             if len(self.steps_per_game) >= self.running_mean_window:
-                running_mean_steps = np.convolve(self.steps_per_game, np.ones(self.running_mean_window) / self.running_mean_window,
+                running_mean_steps = np.convolve(self.steps_per_game,
+                                                 np.ones(self.running_mean_window) / self.running_mean_window,
                                                  mode='valid')
-                self.ax_1.plot(range(start_index + self.running_mean_window - 1, start_index + len(self.steps_per_game)),
-                               running_mean_steps, label='Running Mean Steps per Game', color='red')
+                self.ax_1.plot(
+                    range(start_index + self.running_mean_window - 1, start_index + len(self.steps_per_game)),
+                    running_mean_steps, label='Running Mean Steps per Game', color='red')
+
+            self.exploration_rate_plot.set_data(self.steps, self.exploration_rate_history)
+            self.ax_4.relim()
+            self.ax_4.autoscale_view(True, True, True)
 
             plt.pause(0.1)
 
@@ -111,6 +127,16 @@ class plot:
 
             self.ax_2.plot(self.games[start_index + self.running_mean_window - 1:], float(running_mean_reward),
                            label='Running Mean Total Reward', color='red')
+
+
+    def update_exploration_rate(self, exploration_rate):
+        self.exploration_rate_history.append(exploration_rate)
+        self.exploration_rate_plot.set_data(self.steps, self.exploration_rate_history)
+        self.ax_4.relim()  # Recalculate limits
+        self.ax_4.autoscale_view(True, True, True)
+
+        plt.pause(0.1)
+
 
     # inefficient
     """
@@ -151,13 +177,14 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
     done = False
     self.memory.cache(old_features, new_features, own_action, reward, done)
     td_estimate, loss = self.agent.learn(self.memory)
+    exploration_rate = self.agent.exploration_rate
     for event in events:
         self.past_events_count[event] += 1
 
     self.past_movements[own_action] += 1
 
     if self.draw_plot:
-        self.plot.append(reward)
+        self.plot.append(reward, exploration_rate)
         self.plot.update()
         #self.plot.update_event_plot(self.past_events_count)
 
@@ -252,7 +279,6 @@ class RewardHandler:
         if self.previous_positions[own_position[0], own_position[1]] > 1:
             reward += self.REWARD_CONFIG["ALREADY_VISITED"] * self.previous_positions[
                 own_position[0], own_position[1]]  # push to explore new areas, avoid local maximas
-
         if new_features[1][center[0],center[1]] == 0 and old_features[1][center[0],center[1]]> 0:
             reward += self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"]
 
