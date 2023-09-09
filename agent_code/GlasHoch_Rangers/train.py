@@ -218,20 +218,39 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     # todo save model
 
 
+
 class RewardHandler:
     def __init__(self, REWARD_CONFIG: str):
         self.state_processor = State(window_size=1)  # maybe move the distance function to utils or something
         self.REWARD_CONFIG = REWARD_CONFIG
         self.previous_positions = defaultdict(int)
+        self.moves = [np.array([0,0])]
+        self.rewards = []
 
     def new_round(self):
         self.previous_positions = defaultdict(int)
+        self.moves = [np.array([0,0])]
 
     def reward_from_state(self, new_game_state, old_game_state, new_features, old_features, events) -> int:
+
+
         own_position = old_game_state["self"][3]
         own_move = np.array(new_game_state["self"][3]) - np.array(old_game_state["self"][3])
+
+
         enemy_positions = [enemy[3] for enemy in old_game_state["others"]]
-        reward = 0
+
+        if np.all(self.moves[-1] - own_move == np.array([0, 0])) and not np.all(own_move == np.array([0, 0])):
+            if self.rewards[-1] > 0:
+                reward = -self.rewards[-1] #only undo positive rewards
+            else:
+                reward = 0
+        else:
+            reward = 0
+
+        if not np.all(own_move == np.array([0, 0])):
+            self.moves.append(own_move) #only append movements
+
 
         for event in events:
             try:
@@ -248,7 +267,7 @@ class RewardHandler:
         except:
             pass
 
-        center = [int(old_features.shape[1] - 1) / 2, int(old_features.shape[2] - 1) / 2]
+        center = np.array([int(old_features.shape[1] - 1) / 2, int(old_features.shape[2] - 1) / 2], dtype=int)
 
         if sum(own_move) != 0:
             if max([old_features[5][int(center[0] + pos[0])][int(center[1] + pos[1])] for pos in moves]) == \
@@ -260,6 +279,9 @@ class RewardHandler:
         if self.previous_positions[own_position[0], own_position[1]] > 1:
             reward += self.REWARD_CONFIG["ALREADY_VISITED"] * self.previous_positions[
                 own_position[0], own_position[1]]  # push to explore new areas, avoid local maximas
+        if new_features[1][center[0],center[1]] == 0 and old_features[1][center[0],center[1]]> 0:
+            reward += self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"]
+
+        if not np.all(own_move == np.array([0, 0])): # only append rewards from valid movements
+            self.rewards.append(reward)
         return reward
-
-

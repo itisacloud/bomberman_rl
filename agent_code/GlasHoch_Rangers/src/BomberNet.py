@@ -113,6 +113,8 @@ class Agent():
             self.lr_scheduler_gamma = AGENT_CONFIG["lr_scheduler_gamma"]
             self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=self.lr_scheduler_step,
                                                                 gamma=self.lr_scheduler_gamma)
+            self.lr_scheduler_min = AGENT_CONFIG["lr_scheduler_min"]
+
         self.REWARD_CONFIG = REWARD_CONFIG
 
         if AGENT_CONFIG["load"] == True: # load model :D
@@ -132,7 +134,6 @@ class Agent():
             return None, None
 
         new_state, old_state, action, reward, done = memory.sample(self.batch_size)
-
 
         # Get TD Estimate
         td_est = self.td_estimate(old_state, action)
@@ -202,6 +203,10 @@ class Agent():
 
         self.imitation_learning_rate *= self.imitation_learning_decay
         self.imitation_learning_rate = max(self.imitation_learning_rate,self.imitation_learning_min)
+        if self.AGENT_CONFIG["lr_scheduler"]:
+            self.lr_scheduler.step()
+            for param_group in self.optimizer.param_groups:
+                param_group['lr'] = max(param_group['lr'], self.lr_scheduler_min)
 
         self.curr_step += 1
         return action_idx
