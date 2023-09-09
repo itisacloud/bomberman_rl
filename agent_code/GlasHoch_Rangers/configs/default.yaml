@@ -13,7 +13,7 @@ AGENT_CONFIG:
   curr_step: 0
   exploration_rate: 1
   exploration_rate_decay: 0.999999
-  exploration_rate_min: 0.05
+  exploration_rate_min: 0.1
   imitation_learning: True
   imitation_learning_rate: 0.8
   imitation_learning_decay: 0.999999
@@ -22,12 +22,12 @@ AGENT_CONFIG:
   load: False
   load_path: todo
   learning_rate: 0.001
-  lr_scheduler_step: 1000
+  lr_scheduler_step: 10000
   lr_scheduler_gamma: 0.99
   lr_scheduler_min: 0.00025
   exploration_method: epsilon-greedy
   loss_fn: MSE
-  lr_scheduler: False
+  lr_scheduler: True
   draw_plot: False
   draw_plot_every: 10
 
