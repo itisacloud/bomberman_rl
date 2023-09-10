@@ -1,9 +1,11 @@
 import logging
 
 class Expert:
-    def __init__(self, name):
+    def __init__(self, name, ):
         if name == "rule_based_agent":
             from ...rule_based_agent import callbacks
+        elif name == "coin_collector_agent":
+            from ...coin_collector_agent import callbacks
         else:
             raise ("Unknown Expert defined in config yaml")
 
