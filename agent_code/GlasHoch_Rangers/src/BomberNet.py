@@ -223,6 +223,7 @@ class Agent():
             return
         if self.curr_step % self.save_every != 0:
             return
+        print(self.__str__())
         save_path = (
                 self.save_dir + f"/{self.agent_name}_{self.config_name}_{int(self.curr_step)}.pth"
         )
