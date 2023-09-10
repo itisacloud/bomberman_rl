@@ -30,7 +30,7 @@ class plot:
         self.loss_update_interval = loss_update_interval
         self.max_steps_to_plot = max_steps_to_plot
         self.running_mean_window = running_mean_window
-        self.save_plot_rate = 100
+        self.save_plot_rate = 1000
 
         # Create a figure with subplots
         self.fig, self.axs = plt.subplots(5, figsize=(10, 15))
