@@ -30,6 +30,7 @@ class plot:
         self.loss_update_interval = loss_update_interval
         self.max_steps_to_plot = max_steps_to_plot
         self.running_mean_window = running_mean_window
+        self.save_plot_rate = 100
 
         # Create a figure with subplots
         self.fig, self.axs = plt.subplots(5, figsize=(10, 15))
@@ -154,6 +155,10 @@ class plot:
         plt.pause(0.1)
 """
 
+    def save(self):
+        if len(self.games) % self.save_plot_rate == 0:
+         plt.savefig(f"logs/plots/{len(self.games)}.png")
+
 def setup_training(self):
     self.reward_handler = RewardHandler(self.REWARD_CONFIG)
     self.memory = Memory(input_dim=self.AGENT_CONFIG["state_dim"], size=self.AGENT_CONFIG["memory_size"])
@@ -216,7 +221,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
     self.reward_handler.new_round()
 
-    # todo save model
+    self.plot.save()
 
 
 

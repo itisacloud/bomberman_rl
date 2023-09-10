@@ -1,35 +1,51 @@
 AGENT_CONFIG:
   agent_name: GlasHoch_Rangers_imitation
   config_name: default
+
+  # dimensions (change only when features change)
   state_dim: [7, 9, 9]
   action_dim: 6
+  curr_step: 0
+
+  # training
   batch_size: 64
   memory_size: 10000
   burnin: 5000
   learn_evry: 10
   sync_evry: 1000
   gamma: 0.95
-  save_every: 100000
-  curr_step: 0
-  exploration_rate: 1
-  exploration_rate_decay: 0.999999
-  exploration_rate_min: 0.1
-  imitation_learning: True
-  imitation_learning_rate: 0.8
-  imitation_learning_decay: 0.999999
-  imitation_learning_min: 0.2
-  imitation_learning_expert: rule_based_agent
-  load: False
-  load_path: todo
+
+  # Training learning rates etc:
   learning_rate: 0.001
   lr_scheduler_step: 10000
   lr_scheduler_gamma: 0.99
   lr_scheduler_min: 0.00025
-  exploration_method: epsilon-greedy
   loss_fn: MSE
   lr_scheduler: True
   draw_plot: False
   draw_plot_every: 10
+
+
+
+
+  # Exploration
+  exploration_method: epsilon-greedy
+  exploration_rate: 1
+  exploration_rate_decay: 0.999995
+  exploration_rate_min: 0.1
+
+  # Imitation Learning
+  imitation_learning: True
+  imitation_learning_rate: 0.75
+  imitation_learning_decay: 0.999995
+  imitation_learning_min: 0.2
+  imitation_learning_expert: rule_based_agent
+
+  # checkpointing model
+  load: True
+  load_path: ./models/GlasHoch_Rangers_imitation_default_200000.pth
+  save_every: 100000
+
 
 REWARD_CONFIG:
   MOVED_LEFT: 1

@@ -3,7 +3,7 @@ import os
 import numpy as np
 import torch
 import yaml
-from .src.BomberNet import Agent
+from .src.agent import Agent
 from agent_code.GlasHoch_Rangers.src.State import State
 
 actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
