@@ -40,7 +40,7 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: ./models/outputModel.pth
+  load_path: ./models/GlasHoch_Rangers_imitation_default_1400000.pth
   save_every: 100000
 
 
