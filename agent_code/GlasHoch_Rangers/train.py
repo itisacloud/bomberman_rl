@@ -219,9 +219,11 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
         self.plot.append_game()
 
+        self.plot.save()
+
     self.reward_handler.new_round()
 
-    self.plot.save()
+
 
 
 
