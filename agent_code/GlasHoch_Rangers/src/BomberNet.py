@@ -125,6 +125,8 @@ class Agent():
         if AGENT_CONFIG["load"] == True: # load model :D
             self.load(AGENT_CONFIG["load_path"])
 
+
+
     def learn(self,memory):
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
@@ -148,7 +150,6 @@ class Agent():
 
         # Backpropagate loss through Q_online
         loss = self.update_Q_online(td_est, td_tgt)
-        print("learned")
         return (td_est.mean().item(), loss)
 
     # the follwoing four functions are from the tutorial and only slightly modified, is this allowed?
@@ -238,6 +239,40 @@ class Agent():
         self.net.load_state_dict(torch.load(model_path,map_location=torch.device(self.device)))
         self.sync_Q_target()  # Sync the target network with the loaded model's parameters
 
+    def __str__(self):
+        config_str = f"Agent Configuration:\n"
+        config_str += f"Agent Name: {self.agent_name}\n"
+        config_str += f"Config Name: {self.config_name}\n"
+        config_str += f"Exploration Rate Min: {self.exploration_rate_min}\n"
+        config_str += f"Exploration Rate Decay: {self.exploration_rate_decay}\n"
+        config_str += f"Exploration Rate: {self.exploration_rate}\n"
+        config_str += f"Imitation Learning: {self.imitation_learning}\n"
+        config_str += f"Imitation Learning Rate: {self.imitation_learning_rate}\n"
+        config_str += f"Imitation Learning Decay: {self.imitation_learning_decay}\n"
+        config_str += f"Imitation Learning Min: {self.imitation_learning_min}\n"
+        config_str += f"Imitation Learning Expert: {self.imitation_learning_expert}\n"
+        config_str += f"State Dimension: {self.state_dim}\n"
+        config_str += f"Action Dimension: {self.action_dim}\n"
+        config_str += f"Batch Size: {self.batch_size}\n"
+        config_str += f"Save Every: {self.save_every}\n"
+        config_str += f"Current Step: {self.curr_step}\n"
+        config_str += f"Device: {self.device}\n"
+        config_str += f"Save Directory: {self.save_dir}\n"
+        config_str += f"Burnin: {self.burnin}\n"
+        config_str += f"Learn Every: {self.learn_every}\n"
+        config_str += f"Sync Every: {self.sync_every}\n"
+        config_str += f"Exploration Method: {self.exploration_method}\n"
+        config_str += f"Gamma: {self.gamma}\n"
+        config_str += f"Loss Function: {self.loss_fn}\n"
+        config_str += f"Optimizer: {self.optimizer}\n"
+        config_str += f"LR Scheduler: {self.lr_scheduling}\n"
+        config_str += f"LR Scheduler Step: {self.lr_scheduler_step}\n"
+        config_str += f"LR Scheduler Gamma: {self.lr_scheduler_gamma}\n"
+        config_str += f"LR Scheduler Min: {self.lr_scheduler_min}\n"
+        config_str += f"Reward Configuration: {self.REWARD_CONFIG}\n"
+
+        return config_str
+
 
 class Expert:
     def __init__(self, name):
@@ -251,3 +286,5 @@ class Expert:
         self.callbacks.setup(self)
     def act(self, gamestate):
         return self.callbacks.act(self,gamestate)
+
+

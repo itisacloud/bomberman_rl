@@ -18,6 +18,7 @@ def setup(self):
     self.AGENT_CONFIG = configs["AGENT_CONFIG"]
     self.REWARD_CONFIG = configs["REWARD_CONFIG"]
     self.agent = Agent(self.AGENT_CONFIG, self.REWARD_CONFIG, training=self.train)
+    print(self.agent)
     self.state_processor = State(window_size=int((self.AGENT_CONFIG["state_dim"][1] - 1) / 2))
     self.draw_plot = self.AGENT_CONFIG["draw_plot"]
 
