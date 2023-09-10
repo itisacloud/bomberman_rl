@@ -13,4 +13,4 @@ source ~/.bashrc
 conda activate bomberEnv
 
 echo "Running bomber training"
-python main.py play --agents GlasHoch_Rangers --train 1 --n-rounds 150000 --no-gui --scenario coin-heaven
+python main.py play --agents GlasHoch_Rangers --train 1 --n-rounds 200000 --no-gui --scenario coin-heaven
