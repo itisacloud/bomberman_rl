@@ -157,7 +157,7 @@ class plot:
 
     def save(self):
         if len(self.games) % self.save_plot_rate == 0:
-         plt.savefig(f"logs/plots/{len(self.games)}.png")
+            plt.savefig(f"logs/plots/{len(self.games)}.png")
 
 def setup_training(self):
     self.reward_handler = RewardHandler(self.REWARD_CONFIG)
@@ -196,7 +196,6 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
         self.plot.append(loss, exploration_rate)
         self.plot.update()
         #self.plot.update_event_plot(self.past_events_count)
-
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
     self.total_reward = 0
@@ -237,6 +236,7 @@ class RewardHandler:
         self.previous_positions = defaultdict(int)
         self.moves = [np.array([0,0])]
         self.rewards = []
+        self.movement_based_rewards = []
 
     def new_round(self):
         self.previous_positions = defaultdict(int)
@@ -248,13 +248,15 @@ class RewardHandler:
 
         enemy_positions = [enemy[3] for enemy in old_game_state["others"]]
 
-        if np.all(self.moves[-1] - own_move == np.array([0, 0])) and not np.all(own_move == np.array([0, 0])):
-            if self.rewards[-1] > 0:
-                reward = -self.rewards[-1] #only undo positive rewards
+        if np.all(self.moves[-1] + own_move == np.array([0, 0])) and not np.all(own_move == np.array([0, 0])):
+            if self.movement_based_rewards[-1] > 0:
+                reward = -self.movement_based_rewards[-1] #only undo positive rewards
             else:
                 reward = 0
         else:
             reward = 0
+
+        movement_reward = 0
 
         if expert_action:
             reward += self.REWARD_CONFIG["EXPERT_ACTION"]
@@ -262,10 +264,11 @@ class RewardHandler:
         if not np.all(own_move == np.array([0, 0])):
             self.moves.append(own_move) #only append movements
 
-
         for event in events:
             try:
                 reward += self.REWARD_CONFIG[event]
+                if event in ["MOVED_UP", "MOVED_DOWN", "MOVED_LEFT", "MOVED_RIGHT"]:
+                    movement_reward += self.REWARD_CONFIG[event]
             except:
                 print(f"No reward defined for event {event}")
 
@@ -284,15 +287,28 @@ class RewardHandler:
             if max([old_features[5][int(center[0] + pos[0])][int(center[1] + pos[1])] for pos in moves]) == \
                     old_features[5][int(center[0] + own_move[0]), int(center[1] + own_move[1])]:
                 reward += self.REWARD_CONFIG["MOVED_TOWARDS_COIN_CLUSTER"]
+                movement_reward += self.REWARD_CONFIG["MOVED_TOWARDS_COIN_CLUSTER"]
+            if max([old_features[6][int(center[0] + pos[0])][int(center[1] + pos[1])] for pos in moves]) == \
+                    old_features[6][int(center[0] + own_move[0]), int(center[1] + own_move[1])]:
+                reward += self.REWARD_CONFIG["MOVED_TOWARDS_ENEMY"]
+                movement_reward += self.REWARD_CONFIG["MOVED_TOWARDS_ENEMY"]
 
         self.previous_positions[own_position[0], own_position[1]] += 1
 
         if self.previous_positions[own_position[0], own_position[1]] > 1:
             reward += self.REWARD_CONFIG["ALREADY_VISITED"] * self.previous_positions[
                 own_position[0], own_position[1]]  # push to explore new areas, avoid local maximas
+
         if new_features[1][center[0],center[1]] == 0 and old_features[1][center[0],center[1]]> 0:
             reward += self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"]
+            movement_reward += self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"]
+        elif new_features[1][center[0],center[1]] <  old_features[1][center[0],center[1]]:
+            reward += self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"]*0.5
+            movement_reward += self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"]*0.5
+
+        self.rewards.append(reward)
 
         if not np.all(own_move == np.array([0, 0])): # only append rewards from valid movements
-            self.rewards.append(reward)
+            self.movement_based_rewards.append(movement_reward)
+
         return reward
