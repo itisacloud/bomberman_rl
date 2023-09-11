@@ -133,7 +133,7 @@ class State:
             if path is None:
                 continue
             for i,pos_path in enumerate(path):
-                matrix[pos_path[0]][pos_path[1]] += 1 / (i+1)
+                matrix[pos_path[0]][pos_path[1]] += 1 / len(path)
         return matrix
 
 
