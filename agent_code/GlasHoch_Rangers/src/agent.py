@@ -4,7 +4,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-
+import yaml
 
 from .BomberNet import BomberNet
 from .expert import Expert
@@ -39,7 +39,10 @@ class Agent():
         self.imitation_learning_expert = AGENT_CONFIG["imitation_learning_expert"]
 
         if self.imitation_learning:
+            self.imitation_learning_expert_name =  self.imitation_learning_expert
             self.imitation_learning_expert = Expert(self.imitation_learning_expert)
+        else:
+            self.imitation_learning_expert_name = "no_expert"
 
         self.state_dim = AGENT_CONFIG["state_dim"]
         self.action_dim = AGENT_CONFIG["action_dim"]
@@ -182,17 +185,67 @@ class Agent():
         self.curr_step += 1
         return action_idx
 
-    def save(self):
+
+    def save(self,save_config = False):
         if self.save_dir is None:
             print("Cannot save model. No save directory given.")
             return
-        if self.curr_step % self.save_every != 0:
+        self.since_last_save += 1
+        if self.curr_step % self.save_every != 0 and self.since_last_save <= self.save_every:
             return
+        self.since_last_save = 0
         print(self.__str__())
-        save_path = (
+
+        # Save the model
+        model_save_path = (
                 self.save_dir + f"/{self.agent_name}_{self.config_name}_{int(self.curr_step)}.pth"
         )
-        torch.save(self.net.state_dict(), save_path)
+        torch.save(self.net.state_dict(), model_save_path)
+
+        # Save the configuration
+        if save_config == True:
+            config_save_path = (
+                    self.save_dir + f"/{self.agent_name}_{self.config_name}_{int(self.curr_step)}.yaml"
+            )
+
+            with open(config_save_path, 'w') as config_file:
+                config_data = {
+                    'AGENT_CONFIG': {
+                        'agent_name': self.agent_name,
+                        'config_name': self.config_name,
+                        'exploration_rate_min': self.exploration_rate_min,
+                        'exploration_rate_decay': self.exploration_rate_decay,
+                        'exploration_rate': self.exploration_rate,
+                        'imitation_learning': self.imitation_learning,
+                        'imitation_learning_rate': self.imitation_learning_rate,
+                        'imitation_learning_decay': self.imitation_learning_decay,
+                        'imitation_learning_min': self.imitation_learning_min,
+                        'imitation_learning_expert': self.imitation_learning_expert,
+                        'imitation_learning_expert_name': self.imitation_learning_expert_name,
+                        'state_dim': self.state_dim,
+                        'action_dim': self.action_dim,
+                        'batch_size': self.batch_size,
+                        'save_every': self.save_every,
+                        'burnin': self.burnin,
+                        'learn_every': self.learn_every,
+                        'sync_every': self.sync_every,
+                        'exploration_method': self.exploration_method,
+                        'gamma': self.gamma,
+                        'loss_fn': str(self.loss_fn).split(".")[-1],  # Extract the loss function name
+                        'learning_rate': self.optimizer.param_groups[0]['lr'],
+                        'lr_scheduler': self.lr_scheduling,
+                        'lr_scheduler_step': self.lr_scheduler_step,
+                        'lr_scheduler_gamma': self.lr_scheduler_gamma,
+                        'lr_scheduler_min': self.lr_scheduler_min,
+                        'load': True,
+                        'load_path': model_save_path,
+                    },
+                    'REWARD_CONFIG': self.REWARD_CONFIG,
+                    'training': self.training,
+                }
+                yaml.dump(config_data, config_file, default_flow_style=False)
+
+            print(f"Model and configuration saved at {model_save_path} and {config_save_path}")
 
     def load(self, model_path):
         print(model_path)
@@ -217,6 +270,7 @@ class Agent():
         config_str += f"Imitation Learning Decay: {self.imitation_learning_decay}\n"
         config_str += f"Imitation Learning Min: {self.imitation_learning_min}\n"
         config_str += f"Imitation Learning Expert: {self.imitation_learning_expert}\n"
+        config_str += f"Imitation Learning Expert Name: {self.imitation_learning_expert_name}\n"
         config_str += f"State Dimension: {self.state_dim}\n"
         config_str += f"Action Dimension: {self.action_dim}\n"
         config_str += f"Batch Size: {self.batch_size}\n"
@@ -237,5 +291,4 @@ class Agent():
         config_str += f"LR Scheduler Gamma: {self.lr_scheduler_gamma}\n"
         config_str += f"LR Scheduler Min: {self.lr_scheduler_min}\n"
         config_str += f"Reward Configuration: {self.REWARD_CONFIG}\n"
-
         return config_str
