@@ -48,9 +48,12 @@ def world_controller(world, n_rounds, *,
             pygame.display.flip()
 
     user_input = None
+    n_steps = 0
     for _ in tqdm(range(n_rounds)):
         world.new_round()
+        tqdm.write(f"Starting round {world.round} of {n_rounds}, total steps {n_steps}",end="\n")
         while world.running:
+
             # Only render when the last frame is not too old
             if gui is not None:
                 render(every_step)
@@ -69,6 +72,7 @@ def world_controller(world, n_rounds, *,
             # Advances step (for turn based: only if user input is available)
             if world.running and not (turn_based and user_input is None):
                 world.do_step(user_input)
+                n_steps += 1
                 user_input = None
             else:
                 # Might want to wait
