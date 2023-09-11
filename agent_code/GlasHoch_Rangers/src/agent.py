@@ -49,6 +49,7 @@ class Agent():
         self.batch_size = AGENT_CONFIG["batch_size"]
         self.save_every = AGENT_CONFIG["save_every"]
         self.curr_step = 0
+        self.since_last_save = 0 # fall back for the save_every
 
         # Hyperparameters
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -99,8 +100,7 @@ class Agent():
         if self.curr_step % self.sync_every == 0:
             self.sync_Q_target()
 
-        if self.curr_step % self.save_every == 0:
-            self.save()
+        self.save() # move check to save function
 
         if self.curr_step < self.burnin:
             return None, None
@@ -187,10 +187,12 @@ class Agent():
 
 
     def save(self,save_config = False):
+
         if self.save_dir is None:
             print("Cannot save model. No save directory given.")
             return
         self.since_last_save += 1
+
         if self.curr_step % self.save_every != 0 and self.since_last_save <= self.save_every:
             return
         self.since_last_save = 0
