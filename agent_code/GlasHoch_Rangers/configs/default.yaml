@@ -28,7 +28,7 @@ AGENT_CONFIG:
   # Exploration
   exploration_method: epsilon-greedy
   exploration_rate: 1
-  exploration_rate_decay: 0.999999
+  exploration_rate_decay: 0.999995
   exploration_rate_min: 0.1
 
   # Imitation Learning
