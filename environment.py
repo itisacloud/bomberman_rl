@@ -349,9 +349,19 @@ class BombeRLeWorld(GenericWorld):
         WALL = -1
         FREE = 0
         CRATE = 1
-        arena = np.zeros((s.COLS, s.ROWS), int)
 
         scenario_info = s.SCENARIOS[self.args.scenario]
+
+        if self.args.scenario == "easy-Start":
+            s.COLS = scenario_info["COLS"]
+            s.ROWS = scenario_info["ROWS"]
+            s.MAX_STEPS = scenario_info["MAX_STEPS"]
+            s.MAX_AGENTS = scenario_info["MAX_AGENTS"]
+
+
+        arena = np.zeros((s.COLS, s.ROWS), int)
+
+
 
         # Crates in random locations
         arena[self.rng.random((s.COLS, s.ROWS)) < scenario_info["CRATE_DENSITY"]] = CRATE
