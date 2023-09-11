@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_Rangers_coins
+  agent_name: GlasHoch_Rangers_coins_with_imitation_reward
   config_name: default
 
   # dimensions (change only when features change)
@@ -40,7 +40,7 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: ./models/GlasHoch_Rangers_imitation_default_1400000.pth
+  load_path: ./models/outputModel.pth
   save_every: 100000
 
 
@@ -49,13 +49,13 @@ REWARD_CONFIG:
   MOVED_RIGHT: 1
   MOVED_UP: 1
   MOVED_DOWN:  1
-  WAITED: -10
+  WAITED: -5
   INVALID_ACTION: -10
   BOMB_DROPPED: 2
   BOMB_EXPLODED: 0
   CRATE_DESTROYED: 5
   COIN_FOUND: 5
-  COIN_COLLECTED: 5
+  COIN_COLLECTED: 10
   KILLED_OPPONENT: 10
   KILLED_SELF: -50
   GOT_KILLED: -10
@@ -68,3 +68,4 @@ REWARD_CONFIG:
   SURVIVED_ROUND: 10
   ALREADY_VISITED: -0.5
   MOVED_OUT_OF_DANGER: 1
+  EXPERT_ACTION: 10

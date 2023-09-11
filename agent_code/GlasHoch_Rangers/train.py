@@ -177,9 +177,12 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
     # perform training here
     new_features = self.state_processor.getFeatures(new_game_state)
     old_features = self.state_processor.getFeatures(old_game_state)
-
+    if self.agent.imitation_learning:
+        expert_action = self.agent.imitation_learning_expert.act(old_game_state) == own_action
+    else:
+        expert_action = False
     own_action = int(actions.index(own_action))
-    reward = self.reward_handler.reward_from_state(new_game_state, old_game_state, new_features, old_features, events)
+    reward = self.reward_handler.reward_from_state(new_game_state, old_game_state, new_features, old_features, events,expert_action)
     done = False
     self.memory.cache(old_features, new_features, own_action, reward, done)
     td_estimate, loss = self.agent.learn(self.memory)
@@ -239,12 +242,9 @@ class RewardHandler:
         self.previous_positions = defaultdict(int)
         self.moves = [np.array([0,0])]
 
-    def reward_from_state(self, new_game_state, old_game_state, new_features, old_features, events) -> int:
-
-
+    def reward_from_state(self, new_game_state, old_game_state, new_features, old_features, events,expert_action=False) -> int:
         own_position = old_game_state["self"][3]
         own_move = np.array(new_game_state["self"][3]) - np.array(old_game_state["self"][3])
-
 
         enemy_positions = [enemy[3] for enemy in old_game_state["others"]]
 
@@ -255,6 +255,9 @@ class RewardHandler:
                 reward = 0
         else:
             reward = 0
+
+        if expert_action:
+            reward += self.REWARD_CONFIG["EXPERT_ACTION"]
 
         if not np.all(own_move == np.array([0, 0])):
             self.moves.append(own_move) #only append movements
