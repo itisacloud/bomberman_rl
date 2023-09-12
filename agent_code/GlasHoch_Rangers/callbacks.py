@@ -21,6 +21,8 @@ def setup(self):
     print(self.agent)
     self.state_processor = State(window_size=int((self.AGENT_CONFIG["state_dim"][1] - 1) / 2))
     self.draw_plot = self.AGENT_CONFIG["draw_plot"]
+    if self.draw_plot:
+        self.mode_plot = self.AGENT_CONFIG["mode_plot"]
 
 def act(self, game_state: dict) -> str:
     features = self.state_processor.getFeatures(game_state)

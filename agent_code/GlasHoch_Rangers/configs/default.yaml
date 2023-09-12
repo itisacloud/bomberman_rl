@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_Rangers_coins_with_imitation_reward
+  agent_name: GlasHoch_Rangers_coins_
   config_name: default
 
   # dimensions (change only when features change)
@@ -16,31 +16,36 @@ AGENT_CONFIG:
   gamma: 0.95
 
   # Training learning rates etc:
+  optimizer: AdamW
+
   learning_rate: 0.001
   lr_scheduler_step: 10000
   lr_scheduler_gamma: 0.99
   lr_scheduler_min: 0.00025
-  loss_fn: MSE
+  loss_fn: SmoothL1
   lr_scheduler: True
-  draw_plot: False
-  draw_plot_every: 10
+
+
+  draw_plot: True
+  mode_plot: static # "static" or "dynamic"
+  draw_plot_every: 100000
 
   # Exploration
   exploration_method: epsilon-greedy
   exploration_rate: 1
-  exploration_rate_decay: 0.999995
+  exploration_rate_decay: 0.999999
   exploration_rate_min: 0.1
 
   # Imitation Learning
   imitation_learning: True
   imitation_learning_rate: 0.75
-  imitation_learning_decay: 0.999995
+  imitation_learning_decay: 0.999999
   imitation_learning_min: 0.2
   imitation_learning_expert: rule_based_agent
 
   # checkpointing model
   load: True
-  load_path: models/GlasHoch_Rangers_coins_default_400000.pth
+  load_path: models/GlasHoch_Rangers_coins_with_imitation_reward_2_default_500000.pth
   save_every: 100000
 
 
@@ -66,6 +71,6 @@ REWARD_CONFIG:
   BOMB_NEAR_ENEMY: 3
   OPPONENT_ELIMINATED: 1
   SURVIVED_ROUND: 10
-  ALREADY_VISITED: -0.5
+  ALREADY_VISITED: -0.05
   MOVED_OUT_OF_DANGER: 1
   EXPERT_ACTION: 10

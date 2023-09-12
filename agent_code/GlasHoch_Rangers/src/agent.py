@@ -79,8 +79,12 @@ class Agent():
             raise ValueError("loss_fn must be either MSE or SmoothL1")
 
         # optimizer
-        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=AGENT_CONFIG["learning_rate"])
-
+        if AGENT_CONFIG["optimizer"]=="Adam":
+            self.optimizer = torch.optim.Adam(self.net.parameters(), lr=AGENT_CONFIG["learning_rate"])
+        elif AGENT_CONFIG["optimizer"]=="AdamW":
+            self.optimizer  = torch.optim.AdamW(self.net.parameters(), lr=AGENT_CONFIG["learning_rate"])
+        else:
+            raise "Undifined optimizer, currently supported Adam and AdamW"
         if AGENT_CONFIG["lr_scheduler"] == True: #implement lr scheduler later
             self.lr_scheduling = True
             self.lr_scheduler_step = AGENT_CONFIG["lr_scheduler_step"]

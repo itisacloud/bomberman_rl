@@ -18,7 +18,7 @@ moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 
 
 class plot:
-    def __init__(self, loss_update_interval=1000, max_steps_to_plot=10000, running_mean_window=100):
+    def __init__(self, plot_update_interval=1000, max_steps_to_plot=10000, running_mean_window=100, mode_plot = "static"):
         self.loss_history = []
         self.total_rewards = []
         self.event_history = []
@@ -27,10 +27,12 @@ class plot:
         self.loss_mask = []
         self.reward_running_mean = []
         self.exploration_rate_history = []
-        self.loss_update_interval = loss_update_interval
+        self.rewards = []
+        self.plot_update_interval = plot_update_interval
         self.max_steps_to_plot = max_steps_to_plot
         self.running_mean_window = running_mean_window
-        self.save_plot_rate = 1000
+        self.save_plot_rate = plot_update_interval
+        self.mode_plot = mode_plot
 
         # Create a figure with subplots
         self.fig, self.axs = plt.subplots(5, figsize=(10, 15))
@@ -72,17 +74,22 @@ class plot:
         plt.ion()
 
 
-    def append(self, loss, exploration_rate):
+    def append(self, loss, exploration_rate,reward):
         self.loss_mask.append(True) if loss is not None else self.loss_mask.append(False)
         if loss is not None:
             self.loss_history.append(loss)
         self.steps.append(len(self.loss_mask))
         self.exploration_rate_history.append(exploration_rate)
+        self.rewards.append(reward)
 
     def append_game(self):
         self.games.append(self.steps[-1])
 
+
     def update(self):
+        if len(self.loss_mask) % self.plot_update_interval != 0:
+            return
+
         if len(self.loss_mask) != 0:
             start_index = max(0, len(self.loss_mask) - self.max_steps_to_plot)
             self.loss_plot.set_data(range(start_index, len(self.loss_history)), self.loss_history[start_index:])
@@ -113,52 +120,26 @@ class plot:
             self.ax_4.relim()
             self.ax_4.autoscale_view(True, True, True)
 
+            rewards_per_game = [sum(self.rewards[self.games[i-1]:game]) for i, game in enumerate(self.games) if i > 0]
+            self.total_reward_plot.set_data(range(len(rewards_per_game)),rewards_per_game)
+            if len(rewards_per_game) >= self.running_mean_window:
+                running_mean_reward = np.convolve(rewards_per_game,
+                                                  np.ones(self.running_mean_window) / self.running_mean_window,
+                                                  mode='valid')
+                self.ax_2.plot(range(len(self.running_mean_window,running_mean_reward)),
+                               running_mean_reward,
+                               label='Running Mean Total Reward', color='red')
+            self.ax_2.relim()
+            self.ax_2.autoscale_view(True,True,True)
+
+            self.exploration_rate_plot.set_data(self.steps, self.exploration_rate_history)
+            self.ax_4.relim()  # Recalculate limits
+            self.ax_4.autoscale_view(True, True, True)
             plt.pause(0.1)
 
-    def update_reward_plot(self, total_reward):
-        start_index = max(0, len(self.total_rewards) - self.max_steps_to_plot)
-        self.total_rewards.append(total_reward)
-        self.total_reward_plot.set_data(range(start_index, len(self.total_rewards)), self.total_rewards)
-
-
-        if len(self.total_rewards) >= self.running_mean_window:
-
-            running_mean_reward = np.convolve(self.total_rewards,
-                                              np.ones(self.running_mean_window) / self.running_mean_window,
-                                              mode='valid')
-            self.ax_2.plot(range(start_index + self.running_mean_window - 1, start_index + len(self.total_rewards)), running_mean_reward,
-                           label='Running Mean Total Reward', color='red')
-        self.ax_2.relim()  # Recalculate limits
-        self.ax_2.autoscale_view(True, True, True)
-
-    def update_exploration_rate(self, exploration_rate):
-        self.exploration_rate_history.append(exploration_rate)
-        self.exploration_rate_plot.set_data(self.steps, self.exploration_rate_history)
-        self.ax_4.relim()  # Recalculate limits
-        self.ax_4.autoscale_view(True, True, True)
-
-        plt.pause(0.1)
-
-
-    # inefficient
-    """
-    def update_event_plot(self, event_counts):
-        event_names = [event.capitalize() for event in EVENTS]
-        event_counts = [event_counts.get(event, 0) for event in EVENTS]
-
-        self.ax_3.clear()  # Clear the previous event plot
-        self.ax_3.bar(event_names, event_counts)
-        self.ax_3.set_xticklabels(event_names, rotation=45, ha='right')
-        self.ax_3.set_ylim(0, max(event_counts) + 1)
-        self.ax_3.set_xlabel('Events')
-        self.ax_3.set_ylabel('Event Counts')
-        plt.pause(0.1)
-"""
-
-    def save(self):
-        if len(self.games) % self.save_plot_rate == 0:
-            plt.savefig(f"logs/plots/{len(self.games)}.png")
-
+    def save(self,name):
+        if self.steps[-1] % self.save_plot_rate == 0 and self.mode_plot == "static":
+            plt.savefig(f"./plots/{len(self.games)}_{name}.png")
 def setup_training(self):
     self.reward_handler = RewardHandler(self.REWARD_CONFIG)
     self.memory = Memory(input_dim=self.AGENT_CONFIG["state_dim"], size=self.AGENT_CONFIG["memory_size"])
@@ -168,9 +149,9 @@ def setup_training(self):
     self.past_movements = defaultdict(int)
 
     self.loss_history = []
-    self.loss_update_interval = 1
+    self.plot_update_interval = 10
     if self.draw_plot:
-        self.plot = plot(loss_update_interval=self.AGENT_CONFIG["draw_plot_every"])
+        self.plot = plot(plot_update_interval=self.AGENT_CONFIG["draw_plot_every"],mode_plot=self.mode_plot)
 
 
 def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_state: dict, events: List[str]):
@@ -193,9 +174,9 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
     self.past_movements[own_action] += 1
 
     if self.draw_plot:
-        self.plot.append(loss, exploration_rate)
+        self.plot.append(loss, exploration_rate,reward)
         self.plot.update()
-        #self.plot.update_event_plot(self.past_events_count)
+        self.plot.save(self.agent.agent_name)
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
     self.total_reward = 0
@@ -217,11 +198,9 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     self.agent.save()
 
     if self.draw_plot:
-        self.plot.update_reward_plot(self.total_reward)
 
         self.plot.append_game()
-
-        self.plot.save()
+        self.plot.save(self.agent.agent_name)
 
     self.reward_handler.new_round()
 
@@ -310,5 +289,4 @@ class RewardHandler:
 
         if not np.all(own_move == np.array([0, 0])): # only append rewards from valid movements
             self.movement_based_rewards.append(movement_reward)
-
         return reward
