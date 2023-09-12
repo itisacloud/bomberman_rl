@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --gres=gpu:1
+#SBATCH --gres=gpu:3
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task 2
 #SBATCH -p exercise
@@ -13,4 +13,4 @@ source ~/.bashrc
 conda activate bomberEnv
 
 echo "Running bomber training"
-python main.py play --agents GlasHoch_Rangers --train 1 --n-rounds 200000 --no-gui --scenario coin-heaven
+python main.py play --agents GlasHoch_Rangers --train 1 --n-rounds 300000 --no-gui --scenario easy-Start
