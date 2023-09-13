@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_Rangers_startEasy
+  agent_name: GlasHoch_Rangers_startEasy_die_zweite
   config_name: default
 
   # dimensions (change only when features change)
@@ -12,23 +12,23 @@ AGENT_CONFIG:
   memory_size: 10000
   burnin: 5000
   learn_evry: 10
-  sync_evry: 1000
+  sync_evry: 500
   gamma: 0.95
 
   # Training learning rates etc:
   optimizer: AdamW
 
-  learning_rate: 0.001
+  learning_rate: 0.0001
   lr_scheduler_step: 10000
   lr_scheduler_gamma: 0.975
-  lr_scheduler_min: 0.00025
+  lr_scheduler_min: 0.0001
   loss_fn: SmoothL1
   lr_scheduler: True
 
 
   draw_plot: False
   mode_plot: static # "static" or "dynamic"
-  draw_plot_every: 100cd 000
+  draw_plot_every: 10000
 
   # Exploration
   exploration_method: epsilon-greedy
@@ -45,7 +45,8 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: models/GlasHoch_Rangers_coins__default_600000.pth
+  load_path: models/GlasHoch_Rangers_startEasy_default_400000.pth
+
   save_every: 100000
 
 
