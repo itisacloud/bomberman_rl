@@ -26,7 +26,7 @@ AGENT_CONFIG:
   lr_scheduler: True
 
 
-  draw_plot: True
+  draw_plot: False
   mode_plot: static # "static" or "dynamic"
   draw_plot_every: 100cd 000
 
