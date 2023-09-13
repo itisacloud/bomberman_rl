@@ -190,7 +190,7 @@ class Agent():
         return action_idx
 
 
-    def save(self,save_config = False):
+    def save(self,save_config = True):
 
         if self.save_dir is None:
             print("Cannot save model. No save directory given.")
@@ -226,7 +226,7 @@ class Agent():
                         'imitation_learning_rate': self.imitation_learning_rate,
                         'imitation_learning_decay': self.imitation_learning_decay,
                         'imitation_learning_min': self.imitation_learning_min,
-                        'imitation_learning_expert': self.imitation_learning_expert,
+                        'imitation_learning_expert': self.imitation_learning_expert_name,
                         'imitation_learning_expert_name': self.imitation_learning_expert_name,
                         'state_dim': self.state_dim,
                         'action_dim': self.action_dim,
@@ -250,7 +250,6 @@ class Agent():
                     'training': self.training,
                 }
                 yaml.dump(config_data, config_file, default_flow_style=False)
-
             print(f"Model and configuration saved at {model_save_path} and {config_save_path}")
 
     def load(self, model_path):
