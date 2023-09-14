@@ -5,7 +5,7 @@ from collections import namedtuple, defaultdict
 from typing import List, DefaultDict
 
 class plot:
-    def __init__(self, plot_update_interval=1000, max_steps_to_plot=10000, running_mean_window=100, mode_plot = "static"):
+    def __init__(self, plot_update_interval=1000, max_steps_to_plot=10, running_mean_window=3, mode_plot = "static"):
         self.loss_history = []
         self.total_rewards = []
         self.event_history = []
@@ -62,6 +62,7 @@ class plot:
 
 
     def append(self, loss, exploration_rate,reward):
+        print(loss)
         self.loss_mask.append(True) if loss is not None else self.loss_mask.append(False)
         if loss is not None:
             self.loss_history.append(loss)
@@ -78,17 +79,16 @@ class plot:
             return
 
         if len(self.loss_mask) != 0:
-            start_index = max(0, len(self.loss_mask) - self.max_steps_to_plot)
-            self.loss_plot.set_data(range(start_index, len(self.loss_history)), self.loss_history[start_index:])
+            self.loss_plot.set_data(range(len(self.loss_history)), self.loss_history)
             self.ax.relim()
             self.ax.autoscale_view(True, True, True)
 
             if len(self.loss_history) >= self.running_mean_window:
                 running_mean_loss = np.convolve(self.loss_history,
                                                 np.ones(self.running_mean_window) / self.running_mean_window,
-                                                mode='valid')
-                self.ax.plot(range(start_index + self.running_mean_window - 1, len(self.loss_history)),
-                                                     running_mean_loss, label='Running Mean Loss', color='red')
+                                               mode='valid')
+                self.ax.plot(range(self.running_mean_window, len(running_mean_loss) + self.running_mean_window),
+                                                         running_mean_loss, label='Running Mean Loss', color='red')
 
             self.steps_per_game = [game - self.games[i - 1] for i, game in enumerate(self.games) if i > 0]
             self.steps_per_game_plot.set_data(range(len(self.steps_per_game)), self.steps_per_game)
@@ -100,7 +100,7 @@ class plot:
                                                  np.ones(self.running_mean_window) / self.running_mean_window,
                                                  mode='valid')
                 self.ax_1.plot(
-                    range(start_index + self.running_mean_window - 1, start_index + len(self.steps_per_game)),
+                    range( self.running_mean_window , len(running_mean_steps)+self.running_mean_window),
                     running_mean_steps, label='Running Mean Steps per Game', color='red')
 
             self.exploration_rate_plot.set_data(self.steps, self.exploration_rate_history)
@@ -113,7 +113,9 @@ class plot:
                 running_mean_reward = np.convolve(rewards_per_game,
                                                   np.ones(self.running_mean_window) / self.running_mean_window,
                                                   mode='valid')
-                self.ax_2.plot(range(len(self.running_mean_window,running_mean_reward)),
+                print(len(range(self.running_mean_window,len(running_mean_reward)+self.running_mean_window)))
+                print(len(running_mean_reward))
+                self.ax_2.plot(range(self.running_mean_window,len(running_mean_reward)+self.running_mean_window),
                                running_mean_reward,
                                label='Running Mean Total Reward', color='red')
             self.ax_2.relim()
