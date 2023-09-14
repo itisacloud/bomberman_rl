@@ -46,7 +46,7 @@ AGENT_CONFIG:
   load: True
   load_path: models/GlasHoch_Rangers_startEasy_die_zweite_default_400000.pth
 
-  save_every: 10
+  save_every: 500000
 
 
 REWARD_CONFIG:
