@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_Rangers_startEasy_die_zweite
+  agent_name: GlasHoch_rangers_startEasy_die_dritte
   config_name: default
 
   # dimensions (change only when features change)
@@ -25,14 +25,13 @@ AGENT_CONFIG:
   loss_fn: SmoothL1
   lr_scheduler: True
 
-
   draw_plot: False
   mode_plot: static # "static" or "dynamic"
   draw_plot_every: 10000
 
   # Exploration
   exploration_method: epsilon-greedy
-  exploration_rate: 0.66
+  exploration_rate: 0.6
   exploration_rate_decay: 0.9999975
   exploration_rate_min: 0.1
 
@@ -45,9 +44,9 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: models/GlasHoch_Rangers_startEasy_default_400000.pth
+  load_path: models/GlasHoch_Rangers_startEasy_die_zweite_default_400000.pth
 
-  save_every: 100000
+  save_every: 10
 
 
 REWARD_CONFIG:
