@@ -10,8 +10,8 @@ AGENT_CONFIG:
   # training
   batch_size: 16
   memory_size: 10000
-  burnin: 5000
-  learn_evry: 10
+  burnin: 20
+  learn_evry: 1
   sync_evry: 500
   gamma: 0.95
 
@@ -21,13 +21,13 @@ AGENT_CONFIG:
   learning_rate: 0.0001
   lr_scheduler_step: 10000
   lr_scheduler_gamma: 0.975
-  lr_scheduler_min: 0.0001
+  lr_scheduler_min: 0.00001
   loss_fn: SmoothL1
   lr_scheduler: True
 
-  draw_plot: False
+  draw_plot: True
   mode_plot: static # "static" or "dynamic"
-  draw_plot_every: 10000
+  draw_plot_every: 5
 
   # Exploration
   exploration_method: epsilon-greedy
@@ -44,7 +44,8 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: models/GlasHoch_Rangers_startEasy_die_zweite_default_400000.pth
+  load_path: models/GlasHoch_rangers_startEasy_die_vierte_learn_evry_turn_more_sync_default_398208.pth
+
 
   save_every: 500000
 
