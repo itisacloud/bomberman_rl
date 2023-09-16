@@ -53,7 +53,8 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
     if self.draw_plot:
         self.plot.append(loss, exploration_rate,reward)
         self.plot.update()
-        self.plot.save(self.agent.agent_name)
+        if self.agent.curr_step % self.agent.save_every == 0:
+            self.plot.save(self.agent.agent_name)
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
     self.total_reward = 0
@@ -74,9 +75,9 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     self.agent.save()
 
     if self.draw_plot:
-
         self.plot.append_game()
-        self.plot.save(self.agent.agent_name)
+        if self.agent.curr_step % self.agent.save_every == 0:
+            self.plot.save(self.agent.agent_name)
 
     self.reward_handler.new_round()
 
@@ -98,6 +99,7 @@ class RewardHandler:
         self.moves = [np.array([0,0])]
 
     def reward_from_state(self, new_game_state, old_game_state, new_features, old_features, events,expert_action=False,expert_ratio = 0.0) -> int:
+
         own_position = old_game_state["self"][3]
         own_move = np.array(new_game_state["self"][3]) - np.array(old_game_state["self"][3])
 
@@ -154,12 +156,10 @@ class RewardHandler:
             reward += self.REWARD_CONFIG["ALREADY_VISITED"] * self.previous_positions[
                 own_position[0], own_position[1]]  # push to explore new areas, avoid local maximas
 
-        if new_features[1][center[0],center[1]] == 0 and old_features[1][center[0],center[1]]> 0:
+        if old_features[1][center[0]+own_move[0],center[1]+own_move[1]] == 0 and old_features[1][center[0],center[1]]> 0:
             reward += self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"]
-            movement_reward += self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"]
-        elif new_features[1][center[0],center[1]] <  old_features[1][center[0],center[1]]:
-            reward += self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"]*0.5
-            movement_reward += self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"]*0.5
+        if old_features[1][center[0]+own_move[0],center[1]+own_move[1]] != 0 and old_features[1][center[0],center[1]] == 0:
+            reward -= self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"] #handle this diffrently since its the explosion can change
 
         self.rewards.append(reward)
 

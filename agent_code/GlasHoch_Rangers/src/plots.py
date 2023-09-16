@@ -126,5 +126,4 @@ class plot:
             plt.pause(0.1)
 
     def save(self,name):
-        if self.steps[-1] % self.save_plot_rate == 0 and self.mode_plot == "static":
-            plt.savefig(f"./plots/{len(self.games)}_{name}.png")
+        plt.savefig(f"./plots/{len(self.games)}_{name}.png")
