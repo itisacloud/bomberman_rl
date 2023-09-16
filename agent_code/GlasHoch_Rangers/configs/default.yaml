@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_rangers_startEasy_die_fuenfte
+  agent_name: GlasHoch_first_run_start_easy_parallel
   config_name: default
 
   # dimensions (change only when features change)
@@ -30,7 +30,7 @@ AGENT_CONFIG:
 
   # Exploration
   exploration_method: epsilon-greedy
-  exploration_rate: 0.75
+  exploration_rate: 1
   exploration_rate_decay: 0.9999975
   exploration_rate_min: 0.1
 
@@ -42,7 +42,7 @@ AGENT_CONFIG:
   imitation_learning_expert: rule_based_agent
 
   # checkpointing model
-  load: True
+  load: False
   load_path: models/GlasHoch_rangers_startEasy_die_vierte_learn_evry_turn_more_sync_default_398208.pth
 
 

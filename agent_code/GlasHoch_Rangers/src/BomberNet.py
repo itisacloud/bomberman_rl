@@ -46,9 +46,8 @@ class BomberNet(nn.Module):
         for p in self.target.parameters():
             p.requires_grad = False
 
-        DataParallel(self.online)  # Wrap the online network in DataParallel
-        DataParallel(self.target)  # Wrap the target network in DataParallel
-
+        self.online = DataParallel(self.online)  # Wrap the online network in DataParallel
+        self.target = DataParallel(self.target)  # Wrap the target network in DataParallel
     def forward(self, input, model):
         input = input.unsqueeze(0)
         if len(input.shape) == 5:
