@@ -33,8 +33,9 @@ def setup_training(self):
 
 def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_state: dict, events: List[str]):
     # perform training here
+    old_features = self.last_features
     new_features = self.state_processor.getFeatures(new_game_state)
-    old_features = self.state_processor.getFeatures(old_game_state)
+
     if self.agent.imitation_learning:
         expert_action = self.agent.imitation_learning_expert.act(old_game_state) == own_action
     else:
@@ -42,7 +43,7 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
     own_action = int(actions.index(own_action))
     reward = self.reward_handler.reward_from_state(new_game_state, old_game_state, new_features, old_features, events,expert_action,self.agent.imitation_learning_rate)
     done = False
-    self.memory.cache(old_features, new_features, own_action, reward, done)
+    self.memory.cache(old_features, old_features, own_action, reward, done)
     td_estimate, loss = self.agent.learn(self.memory)
     exploration_rate = self.agent.exploration_rate
     for event in events:
@@ -58,7 +59,7 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
     self.total_reward = 0
-    features = self.state_processor.getFeatures(last_game_state)
+    features = self.last_features
     own_action = int(actions.index(last_action))
     reward = self.reward_handler.reward_from_state(last_game_state, last_game_state, features, features, events,expert_action=False)
     self.total_reward += reward
