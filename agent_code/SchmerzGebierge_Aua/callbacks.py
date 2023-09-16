@@ -13,7 +13,7 @@ def setup(self):
 
     self.logger.debug('Successfully entered setup code')
 
-    with open(os.environ.get("AGENT_CONF", "./configs/default.yaml"), "r") as ymlfile:
+    with open(os.environ.get("AGENT_CONF", "./configs/ppo.yaml"), "r") as ymlfile:
         configs = yaml.safe_load(ymlfile)
     self.AGENT_CONFIG = configs["AGENT_CONFIG"]
     self.REWARD_CONFIG = configs["REWARD_CONFIG"]
