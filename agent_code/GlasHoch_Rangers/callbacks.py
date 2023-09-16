@@ -26,6 +26,7 @@ def setup(self):
 
 def act(self, game_state: dict) -> str:
     features = self.state_processor.getFeatures(game_state)
+    self.last_features = features
     action_idx = self.agent.act(features, game_state)
     return actions[action_idx]
 
