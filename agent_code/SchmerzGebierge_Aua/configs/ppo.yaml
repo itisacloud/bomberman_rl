@@ -1,0 +1,81 @@
+AGENT_CONFIG:
+  agent_name: GlasHoch_rangers_startEasy_die_fuenfte
+  config_name: default
+
+  # dimensions (change only when features change)
+  state_dim: [7, 9, 9]
+  action_dim: 6
+  curr_step: 0
+
+  # training
+  batch_size: 16
+  memory_size: 10000
+  burnin: 2500
+  learn_evry: 1
+  sync_evry: 500
+  gamma: 0.95
+  lambda: 0.95
+  worker_steps: 4096
+  epochs: 30
+  n_mini_batch: 64
+
+
+  # Training learning rates etc:
+  optimizer: AdamW
+
+  learning_rate: 0.0001
+  lr_scheduler_step: 10000
+  lr_scheduler_gamma: 0.975
+  lr_scheduler_min: 0.00001
+  loss_fn: SmoothL1
+  lr_scheduler: True
+  draw_plot: True
+  mode_plot: static # "static" or "dynamic"
+  draw_plot_every: 10000
+
+  # Exploration
+  exploration_method: epsilon-greedy
+  exploration_rate: 0.75
+  exploration_rate_decay: 0.9999975
+  exploration_rate_min: 0.1
+
+  # Imitation Learning
+  imitation_learning: True
+  imitation_learning_rate: 0.75
+  imitation_learning_decay: 0.9999975
+  imitation_learning_min: 0.2
+  imitation_learning_expert: rule_based_agent
+
+  # checkpointing model
+  load: True
+  load_path: models/GlasHoch_rangers_startEasy_die_vierte_learn_evry_turn_more_sync_default_398208.pth
+
+
+  save_every: 50000
+
+
+REWARD_CONFIG:
+  MOVED_LEFT: 1
+  MOVED_RIGHT: 1
+  MOVED_UP: 1
+  MOVED_DOWN:  1
+  WAITED: -5
+  INVALID_ACTION: -10
+  BOMB_DROPPED: 2
+  BOMB_EXPLODED: 0
+  CRATE_DESTROYED: 5
+  COIN_FOUND: 5
+  COIN_COLLECTED: 10
+  KILLED_OPPONENT: 10
+  KILLED_SELF: -50
+  GOT_KILLED: -10
+  MOVED_TOWARDS_COIN_CLUSTER: 2
+  MOVED_TOWARDS_ENEMY: 1
+  TRAPPED_ENEMY: 5
+  BOMB_NEAR_CRATE: 2
+  BOMB_NEAR_ENEMY: 3
+  OPPONENT_ELIMINATED: 1
+  SURVIVED_ROUND: 10
+  ALREADY_VISITED: -0.05
+  MOVED_OUT_OF_DANGER: 1
+  EXPERT_ACTION: 10
