@@ -62,7 +62,6 @@ class plot:
 
 
     def append(self, loss, exploration_rate,reward):
-        print(loss)
         self.loss_mask.append(True) if loss is not None else self.loss_mask.append(False)
         if loss is not None:
             self.loss_history.append(loss)

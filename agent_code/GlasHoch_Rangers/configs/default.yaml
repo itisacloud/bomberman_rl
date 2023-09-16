@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_rangers_startEasy_die_dritte
+  agent_name: GlasHoch_rangers_startEasy_die_fuenfte
   config_name: default
 
   # dimensions (change only when features change)
@@ -10,7 +10,7 @@ AGENT_CONFIG:
   # training
   batch_size: 16
   memory_size: 10000
-  burnin: 20
+  burnin: 2500
   learn_evry: 1
   sync_evry: 500
   gamma: 0.95
@@ -27,11 +27,11 @@ AGENT_CONFIG:
 
   draw_plot: True
   mode_plot: static # "static" or "dynamic"
-  draw_plot_every: 5
+  draw_plot_every: 10000
 
   # Exploration
   exploration_method: epsilon-greedy
-  exploration_rate: 0.6
+  exploration_rate: 0.75
   exploration_rate_decay: 0.9999975
   exploration_rate_min: 0.1
 
@@ -47,7 +47,7 @@ AGENT_CONFIG:
   load_path: models/GlasHoch_rangers_startEasy_die_vierte_learn_evry_turn_more_sync_default_398208.pth
 
 
-  save_every: 500000
+  save_every: 50000
 
 
 REWARD_CONFIG:
