@@ -24,7 +24,6 @@ AGENT_CONFIG:
   lr_scheduler_min: 0.00001
   loss_fn: SmoothL1
   lr_scheduler: True
-
   draw_plot: True
   mode_plot: static # "static" or "dynamic"
   draw_plot_every: 10000

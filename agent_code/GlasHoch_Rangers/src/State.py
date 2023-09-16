@@ -14,6 +14,7 @@ class State:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.enemies = enemies
         self.rotation = 0
+        self.test = 0
 
     def new_round(self):
         self.bomb_timeout = {}
@@ -216,5 +217,18 @@ class State:
         features = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,reachabel_fields,coins_idw_map,enemies_idw_map]) # get features
 
         features = torch.tensor(features).to(torch.float32).to(self.device)
-
+        if self.test <= 1:
+            print("features -------------------------")
+            print("pos",pos)
+            print("field:")
+            print(field)
+            print("explosions")
+            print(explosion_map)
+            print("enemy map")
+            print(enemies_pos_map)
+            print("coin map")
+            print(coins_pos_map)
+            print("coins_idw_map")
+            print(coins_idw_map)
+            self.test += 1
         return features
