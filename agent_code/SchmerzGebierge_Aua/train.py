@@ -4,7 +4,7 @@ from typing import List, DefaultDict
 import numpy as np
 
 from .src.State import State
-from .src.cache import Memory
+from .src.Memory import Memory
 from .src.plots import plot
 
 import matplotlib.pyplot as plt
@@ -19,41 +19,47 @@ moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 
 def setup_training(self):
     self.reward_handler = RewardHandler(self.REWARD_CONFIG)
-    self.memory = Memory(input_dim=self.AGENT_CONFIG["state_dim"], size=self.AGENT_CONFIG["memory_size"])
     self.past_rewards = []
-    self.past_events = defaultdict(list)
-    self.past_events_count = defaultdict(int)
-    self.past_movements = defaultdict(int)
+    self.batch_size = 0
+    self.memory = Memory(input_dim=self.AGENT_CONFIG["state_dim"], size=batch_size)
 
-    self.loss_history = []
-    self.plot_update_interval = 10
-    if self.draw_plot:
-        self.plot = plot(plot_update_interval=self.AGENT_CONFIG["draw_plot_every"],mode_plot=self.mode_plot)
+    self.curr_step = 0
+
+    """
+    rewards = np.zeros(self.worker_steps, dtype=np.float32)
+    actions = np.zeros(self.worker_steps, dtype=np.int32)
+    done = np.zeros(self.worker_steps, dtype=bool)
+    obs = np.zeros((self.worker_steps, 4, 84, 84), dtype=np.float32)
+    log_pis = np.zeros(self.worker_steps, dtype=np.float32)
+    values = np.zeros(self.worker_steps, dtype=np.float32)
+    
+    """
+
 
 
 def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_state: dict, events: List[str]):
     # perform training here
+
+    features = self.state_processor.getFeatures(old_game_state)
     new_features = self.state_processor.getFeatures(new_game_state)
-    old_features = self.state_processor.getFeatures(old_game_state)
-    if self.agent.imitation_learning:
-        expert_action = self.agent.imitation_learning_expert.act(old_game_state) == own_action
-    else:
-        expert_action = False
-    own_action = int(actions.index(own_action))
-    reward = self.reward_handler.reward_from_state(new_game_state, old_game_state, new_features, old_features, events,expert_action,self.agent.imitation_learning_rate)
-    done = False
-    self.memory.cache(old_features, new_features, own_action, reward, done)
-    td_estimate, loss = self.agent.learn(self.memory)
-    exploration_rate = self.agent.exploration_rate
-    for event in events:
-        self.past_events_count[event] += 1
+    pi, v = self.policy_old(torch.tensor(self.features, dtype=torch.float32, device=device).unsqueeze(0))
+    value = v.cpu().numpy()
+    a = pi.sample()
+    action = a.cpu().numpy()
+    log_pis = pi.log_prob(a).cpu().numpy()
 
-    self.past_movements[own_action] += 1
+    reward = self.reward_handler(new_game_state, old_game_state, new_features, self.features, events,expert_action=False,expert_ratio = 0.0)
 
-    if self.draw_plot:
-        self.plot.append(loss, exploration_rate,reward)
-        self.plot.update()
-        self.plot.save(self.agent.agent_name)
+
+    self.memory.cache(value, action, log_pis, reward, new_features, False)
+
+    if self.curr_step % self.batch_size == 0:
+        self.memory.returns, self.memory.advantges = self.calculate_advantages(False, self.memory.rewards, self.memory.values)
+        self.agent.train(self.memory) # learning happens (backprob through the network)
+        self.memory = self.memory(input_dim=self.AGENT_CONFIG["state_dim"], size=self.batch_size)
+
+
+
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
     self.total_reward = 0
@@ -63,7 +69,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     self.total_reward += reward
 
     done = True
-    self.memory.cache(features, features, own_action, reward, done)
+    self.memory.cache(features, new_features, own_action, reward, done)
     td_estimate, loss = self.agent.learn(self.memory)
 
     for event in events:
@@ -80,6 +86,19 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
 
     self.reward_handler.new_round()
 
+def calculate_advantages(self, done, rewards, values):
+    _, last_value = self.policy_old(torch.tensor(self.obs, dtype=torch.float32, device=device).unsqueeze(0))
+    last_value = last_value.cpu().data.numpy()
+    values = np.append(values, last_value)
+    returns = []
+    gae = 0
+    for i in reversed(range(len(rewards))):
+        mask = 1.0 - done[i]
+        delta = rewards[i] + self.gamma * values[i + 1] * mask - values[i]
+        gae = delta + self.gamma * self.lamda * mask * gae
+        returns.insert(0, gae + values[i])
+    adv = np.array(returns) - values[:-1]
+    return returns, (adv - np.mean(adv)) / (np.std(adv) + 1e-8)
 
 
 

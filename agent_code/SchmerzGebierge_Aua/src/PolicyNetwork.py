@@ -10,7 +10,7 @@ from torch.cuda import device
 from torch.distributions import Categorical
 from torch.nn.parallel import DataParallel  # Import DataParallel
 
-from .cache import Memory
+from .Memory import Memory
 
 actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
 
@@ -53,6 +53,7 @@ class PolicyNetwork(nn.Module):
 
     def forward(self, obs):
         return Categorical(logits=self.actor(obs)), self.critic(obs).reshape(-1)
+
 
 class PPO:
     def __init__(self):
