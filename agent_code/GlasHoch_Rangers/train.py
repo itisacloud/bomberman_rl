@@ -153,7 +153,7 @@ class RewardHandler:
 
         self.previous_positions[own_position[0], own_position[1]] += 1
 
-        if self.previous_positions[own_position[0], own_position[1]] > 1:
+        if self.previous_positions[own_position[0], own_position[1]] > 1 or "WAITED" in events or "INVALID ACTION" in events:
             reward += self.REWARD_CONFIG["ALREADY_VISITED"] * self.previous_positions[
                 own_position[0], own_position[1]]  # push to explore new areas, avoid local maximas
 

@@ -162,9 +162,10 @@ class State:
         return reachable_fields
 
     def getFeatures(self, game_state):
+
+
         # get features
         self.current_step += 1
-
         field = game_state['field']
         bomb = game_state['bombs']
         coins = game_state['coins']
@@ -219,7 +220,6 @@ class State:
         features = torch.tensor(features).to(torch.float32).to(self.device)
         if self.test <= 1:
             print("features -------------------------")
-            print("pos",pos)
             print("field:")
             print(field)
             print("explosions")
