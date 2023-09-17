@@ -55,6 +55,10 @@ class Memory:
 
     def sample(self, batch_size: int = 1) -> tuple[
         torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+
+
+
+
         indices = torch.randint(0, min(self.counter, self.size), (batch_size,),device=self.device)
         rotation = torch.randint(0, 4, (batch_size,),device=self.device)
 

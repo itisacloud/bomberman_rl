@@ -5,6 +5,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import yaml
+from matplotlib import pyplot as plt
 from torch import optim, nn
 from torch.cuda import device
 
@@ -58,6 +59,7 @@ class Agent():
         self.n_mini_batch = AGENT_CONFIG["n_mini_batch"]
         self.epochs = AGENT_CONFIG["epochs"]
         self.lr = AGENT_CONFIG["learning_rate"]
+        self.clip_range = AGENT_CONFIG["clip_range"]
 
         self.rewards = []
         self.save_directory = "./models"
@@ -94,7 +96,43 @@ class Agent():
         self.policy_old.load_state_dict(torch.load(os.path.join(self.save_directory, filename)))
         print('Resuming training from checkpoint \'{}\'.'.format(filename))
 
+    def sample(self, rewards, done):
+        with torch.no_grad():
+            obs = self.obs
+            pi, v = self.policy_old(torch.tensor(self.obs, dtype=torch.float32, device=device).unsqueeze(0))
+            values = v.cpu().numpy()
+            a = pi.sample()
+            actions = a.cpu().numpy()
+            log_pis = pi.log_prob(a).cpu().numpy()
+        self.obs = self.obs.__array__()
+        #env.render()
+        self.rewards.append(rewards)
+        if done:
+            self.episode += 1
+            self.all_episode_rewards.append(np.sum(self.rewards))
+            self.rewards = []
+            #env.reset()
+            if self.episode % 10 == 0:
+                print('Episode: {}, average reward: {}'.format(self.episode,
+                                                               np.mean(self.all_episode_rewards[-10:])))
+                self.all_mean_rewards.append(np.mean(self.all_episode_rewards[-10:]))
+                plt.plot(self.all_mean_rewards)
+                plt.savefig("{}/mean_reward_{}.png".format(self.save_directory, self.episode))
+                plt.clf()
+                self.save_checkpoint()
+        returns, advantages = self.calculate_advantages(done, rewards, values)
+        return {
+            'obs': torch.tensor(obs.reshape(obs.shape[0], *obs.shape[1:]), dtype=torch.float32, device=device),
+            'actions': torch.tensor(actions, device=device),
+            'values': torch.tensor(values, device=device),
+            'log_pis': torch.tensor(log_pis, device=device),
+            'advantages': torch.tensor(advantages, device=device, dtype=torch.float32),
+            'returns': torch.tensor(returns, device=device, dtype=torch.float32)
+        }
+
+    '''
     def sample(self):
+        # not sure if we need worker_steps in our implementation
         rewards = np.zeros(self.worker_steps, dtype=np.float32)
         actions = np.zeros(self.worker_steps, dtype=np.int32)
         done = np.zeros(self.worker_steps, dtype=bool)
@@ -109,15 +147,16 @@ class Agent():
                 a = pi.sample()
                 actions[t] = a.cpu().numpy()
                 log_pis[t] = pi.log_prob(a).cpu().numpy()
+                # seems to me that this shouldnt be called for every step
             self.obs, rewards[t], done[t], _ = env.step(actions[t])
             self.obs = self.obs.__array__()
-            env.render()
+            #env.render()
             self.rewards.append(rewards[t])
             if done[t]:
                 self.episode += 1
                 self.all_episode_rewards.append(np.sum(self.rewards))
                 self.rewards = []
-                env.reset()
+                #env.reset()
                 if self.episode % 10 == 0:
                     print('Episode: {}, average reward: {}'.format(self.episode,
                                                                    np.mean(self.all_episode_rewards[-10:])))
@@ -149,28 +188,14 @@ class Agent():
             returns.insert(0, gae + values[i])
         adv = np.array(returns) - values[:-1]
         return returns, (adv - np.mean(adv)) / (np.std(adv) + 1e-8)
+'''
 
-    def train(self, samples, clip_range):
-        indexes = torch.randperm(self.batch_size)
-        for start in range(0, self.batch_size, self.mini_batch_size):
-            end = start + self.mini_batch_size
-            mini_batch_indexes = indexes[start: end]
-            mini_batch = {}
-            for k, v in samples.items():
-                mini_batch[k] = v[mini_batch_indexes]
-            for _ in range(self.epochs):
-                loss = self.calculate_loss(clip_range=clip_range, samples=mini_batch)
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-            self.policy_old.load_state_dict(self.policy.state_dict())
-
-    def calculate_loss(self, samples, clip_range):
+    def calculate_loss(self, samples):
         sampled_returns = samples['returns']
         sampled_advantages = samples['advantages']
         pi, value = self.policy(samples['obs'])
         ratio = torch.exp(pi.log_prob(samples['actions']) - samples['log_pis'])
-        clipped_ratio = ratio.clamp(min=1.0 - clip_range, max=1.0 + clip_range)
+        clipped_ratio = ratio.clamp(min=1.0 - self.clip_range, max=1.0 + self.clip_range)
         policy_reward = torch.min(ratio * sampled_advantages, clipped_ratio * sampled_advantages)
         entropy_bonus = pi.entropy()
         vf_loss = self.mse_loss(value, sampled_returns)

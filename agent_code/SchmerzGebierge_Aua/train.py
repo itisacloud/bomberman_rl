@@ -2,6 +2,7 @@ from collections import namedtuple, defaultdict
 from typing import List, DefaultDict
 
 import numpy as np
+import torch
 
 from .src.State import State
 from .src.cache import Memory
@@ -35,6 +36,24 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
     # perform training here
     new_features = self.state_processor.getFeatures(new_game_state)
     old_features = self.state_processor.getFeatures(old_game_state)
+
+    # train with PPO
+    samples = self.memory.sample(self.mini_batch_size)
+    indexes = torch.randperm(self.batch_size)
+    for start in range(0, self.batch_size, self.mini_batch_size):
+        end = start + self.mini_batch_size
+        mini_batch_indexes = indexes[start: end]
+        mini_batch = {}
+        for k, v in samples.items():
+            mini_batch[k] = v[mini_batch_indexes]
+        for _ in range(self.epochs):
+            loss = self.calculate_loss(clip_range=self.clip_range, samples=mini_batch)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+        self.policy_old.load_state_dict(self.policy.state_dict())
+
+    # do we we need this for PPO?
     if self.agent.imitation_learning:
         expert_action = self.agent.imitation_learning_expert.act(old_game_state) == own_action
     else:
@@ -43,7 +62,8 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
     reward = self.reward_handler.reward_from_state(new_game_state, old_game_state, new_features, old_features, events,expert_action,self.agent.imitation_learning_rate)
     done = False
     self.memory.cache(old_features, new_features, own_action, reward, done)
-    td_estimate, loss = self.agent.learn(self.memory)
+    self.agent.sample(reward, )
+    loss = self.agent.calculate_loss(samples)
     exploration_rate = self.agent.exploration_rate
     for event in events:
         self.past_events_count[event] += 1
