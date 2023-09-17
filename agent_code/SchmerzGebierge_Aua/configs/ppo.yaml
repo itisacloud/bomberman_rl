@@ -18,6 +18,7 @@ AGENT_CONFIG:
   worker_steps: 4096
   epochs: 30
   n_mini_batch: 64
+  clip_range: 0.2
 
 
   # Training learning rates etc:

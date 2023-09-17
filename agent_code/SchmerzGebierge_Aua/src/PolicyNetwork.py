@@ -10,7 +10,7 @@ from torch.cuda import device
 from torch.distributions import Categorical
 from torch.nn.parallel import DataParallel  # Import DataParallel
 
-from .Memory import Memory
+from .cache import Memory
 
 actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
 

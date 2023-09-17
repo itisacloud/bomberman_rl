@@ -63,8 +63,8 @@ class Agent():
         self.save_directory = "./models"
         self.batch_size = self.worker_steps
         self.mini_batch_size = self.batch_size // self.n_mini_batch
-
         # TODO: implement
+        self.obs = State().new_round()
         self.policy = PolicyNetwork().to(device)
         self.mse_loss = nn.MSELoss()
         self.optimizer = torch.optim.Adam([

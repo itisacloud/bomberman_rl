@@ -4,7 +4,7 @@ from typing import List, DefaultDict
 import numpy as np
 
 from .src.State import State
-from .src.Memory import Memory
+from .src.cache import Memory
 from .src.plots import plot
 
 import matplotlib.pyplot as plt
