@@ -96,6 +96,7 @@ class State:
 
         return movable_fields
 
+
     def a_star(self, matrix, start, goal):
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         open_set = [(0, start)]  # Priority queue (cost, position)
@@ -128,6 +129,13 @@ class State:
                         path_matrix[new_x][new_y] = path_matrix[current[0]][current[1]] + [current]
 
         return None
+
+    def normalize_idw_map(self,idw_map):
+        min_value = np.min(idw_map)
+        max_value = np.max(idw_map)
+        normalized_map = (idw_map - min_value) / (max_value - min_value)
+        return normalized_map
+
     def paths_to_idw_matrix(self,field,paths):
         matrix = np.zeros_like(field,dtype=np.float32)
         for path in paths:
@@ -212,13 +220,13 @@ class State:
         coins_pos_map = self.window(coins_pos_map, agent_pos, self.window_size, constant=0)
         enemies_pos_map = self.window(enemies_pos_map, agent_pos, self.window_size, constant=0)
         reachabel_fields = self.window(reachabel_fields, agent_pos, self.window_size, constant=-1)
-        coins_idw_map = self.window(coins_idw_map, agent_pos, self.window_size, constant=0)
-        enemies_idw_map = self.window(enemies_idw_map, agent_pos, self.window_size, constant=0)
+        coins_idw_map = self.normalize_idw_map(self.window(coins_idw_map, agent_pos, self.window_size, constant=0))
+        enemies_idw_map = self.normalize_idw_map(self.window(enemies_idw_map, agent_pos, self.window_size, constant=0))
 
         features = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,reachabel_fields,coins_idw_map,enemies_idw_map]) # get features
 
         features = torch.tensor(features).to(torch.float32).to(self.device)
-        if self.test <= 1:
+        if self.test <= 10:
             print("features -------------------------")
             print("field:")
             print(field)

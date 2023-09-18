@@ -9,7 +9,7 @@ AGENT_CONFIG:
 
   # training
   batch_size: 32
-  memory_size: 20000
+  memory_size: 10000
   burnin: 5000
   learn_evry: 1
   sync_evry: 1000
@@ -29,9 +29,9 @@ AGENT_CONFIG:
   # Info
   draw_plot: True
   mode_plot: static # "static" or "dynamic"
-  draw_plot_every: 10000
+  draw_plot_every: 100000
   debuggin: True
-  debuggin_freq: 100
+  debuggin_freq: 1000
 
   # Exploration
   exploration_method: epsilon-greedy

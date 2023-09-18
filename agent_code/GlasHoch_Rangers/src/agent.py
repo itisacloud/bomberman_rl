@@ -57,6 +57,8 @@ class Agent():
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         if self.device == "cuda":
             self.num_devices = torch.cuda.device_count()
+            print("------------")
+            print(f"Using {self.num_devices} GPUs!")
         else:
             self.num_devices = 1
 
@@ -144,7 +146,15 @@ class Agent():
                           f"learning_rate: {self.lr_scheduler.get_lr()},\n "
                           f"exploration_rate: {self.exploration_rate},\n "
                           f"imitation_learning_rate: {self.imitation_learning_rate}, \n"
-                          f"current_step: {self.curr_step}\n")
+                          f"current_step: {self.curr_step}\n"
+                          f"action {action[0]} \n"
+                          f"reward {reward[0]} \n"
+                          f"td_est {td_est[0]} \n"
+                          f"td_tgt {td_tgt[0]} \n"
+                          f"online Qs {self.net(old_features, model='online')[0]}\n"
+                          f"target Qs {self.net(old_features, model='target')[0]}\n")
+
+
                 self.previous_weight_norms.append(weight_norms)
         return (td_est.mean().item(), loss)
 

@@ -5,15 +5,21 @@ from collections import namedtuple, defaultdict
 from typing import List, DefaultDict
 
 class plot:
-    def __init__(self, plot_update_interval=1000, max_steps_to_plot=10, running_mean_window=100,mode_plot = "static"):
+    def __init__(self, plot_update_interval=1000, max_steps_to_plot=10, running_mean_window=100,mode_plot = "static",imitation_learning=False):
         self.loss_history = []
         self.total_rewards = []
         self.event_history = []
         self.games = [0]
         self.steps = []
+
         self.loss_mask = []
         self.reward_running_mean = []
-        self.exploration_rate_history = []
+        self.exploration_rate_history = []#
+        if imitation_learning:
+            self.imitation = True
+            self.imitation_rate = []
+        else:
+            self.imitation = False
         self.rewards = []
         self.plot_update_interval = plot_update_interval
         self.max_steps_to_plot = max_steps_to_plot
@@ -35,22 +41,24 @@ class plot:
         self.ax.set_title('Training Loss')
         self.ax.legend()
 
-        self.steps_per_game_plot, = self.ax_1.plot([], [], label='Steps per game', color='green')
+        self.steps_per_game_plot, = self.ax_1.plot([], [], label='Steps per game', color='green',alpha=0.5)
         self.ax_1.set_xlabel('Games')
         self.ax_1.set_ylabel('Steps per Game')
         self.ax_1.set_title('Steps per Game')
 
-        self.total_reward_plot, = self.ax_2.plot([], [], label='Total Reward', color='yellow')
+        self.total_reward_plot, = self.ax_2.plot([], [], label='Total Reward', color='yellow',alpha=0.5,)
         self.ax_2.set_xlabel('Games')
         self.ax_2.set_ylabel('Rewards per Game')
         self.ax_2.set_title('Total Reward')
 
-        self.event_plot = self.ax_3.bar([], [], label='Events', color='purple')
+        self.event_plot = self.ax_3.bar([], [], label='Events', color='purple',alpha=0.5)
         self.ax_3.set_xlabel('Games')
         self.ax_3.set_ylabel('Event Counts')
         self.ax_3.set_title('Event Counts')
 
         self.exploration_rate_plot, = self.ax_4.plot([], [], label='Exploration Rate', color='orange')
+        if self.imitation:
+            self.imitation_rate_plot, = self.ax_4.plot([], [], label='Imitation Rate', color='red')
         self.ax_4.set_xlabel('Steps')
         self.ax_4.set_ylabel('Exploration Rate')
         self.ax_4.set_title('Exploration Rate')
@@ -61,13 +69,15 @@ class plot:
         plt.ion()
 
 
-    def append(self, loss, exploration_rate,reward):
+    def append(self, loss, exploration_rate,reward,imitation_rate=None):
         self.loss_mask.append(True) if loss is not None else self.loss_mask.append(False)
         if loss is not None:
             self.loss_history.append(loss)
         self.steps.append(len(self.loss_mask))
         self.exploration_rate_history.append(exploration_rate)
         self.rewards.append(reward)
+        if self.imitation:
+            self.imitation_rate.append(imitation_rate)
 
     def append_game(self):
         self.games.append(self.steps[-1])
@@ -121,6 +131,8 @@ class plot:
             self.ax_2.autoscale_view(True,True,True)
 
             self.exploration_rate_plot.set_data(self.steps, self.exploration_rate_history)
+            if self.imitation:
+                self.imitation_rate_plot.set_data(self.steps, self.imitation_rate)
             self.ax_4.relim()  # Recalculate limits
             self.ax_4.autoscale_view(True, True, True)
             plt.pause(0.1)

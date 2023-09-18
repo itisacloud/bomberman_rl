@@ -28,7 +28,7 @@ def setup_training(self):
     self.loss_history = []
     self.plot_update_interval = 10
     if self.draw_plot:
-        self.plot = plot(plot_update_interval=self.AGENT_CONFIG["draw_plot_every"],mode_plot=self.mode_plot)
+        self.plot = plot(plot_update_interval=self.AGENT_CONFIG["draw_plot_every"],mode_plot=self.mode_plot,imitation_learning=True)
 
 
 def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_state: dict, events: List[str]):
@@ -52,7 +52,7 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
     self.past_movements[own_action] += 1
 
     if self.draw_plot:
-        self.plot.append(loss, exploration_rate,reward)
+        self.plot.append(loss, exploration_rate,reward,self.agent.imitation_learning_rate)
         self.plot.update()
         if self.agent.curr_step % self.agent.save_every == 0:
             self.plot.save(self.agent.agent_name)
@@ -166,4 +166,5 @@ class RewardHandler:
 
         if not np.all(own_move == np.array([0, 0])): # only append rewards from valid movements
             self.movement_based_rewards.append(movement_reward)
+
         return reward
