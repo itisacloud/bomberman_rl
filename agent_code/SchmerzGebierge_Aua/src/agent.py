@@ -1,4 +1,3 @@
-
 import os
 from pathlib import Path
 
@@ -8,11 +7,11 @@ import yaml
 from torch import optim, nn
 from torch.cuda import device
 
-from .PolicyNetwork import PolicyNetwork
-from .State import State
-from .expert import Expert
+from PolicyNetwork import PolicyNetwork
+from State import State
+from expert import Expert
 
-actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
+actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', "BOMB"]
 
 reversed = {"UP": 0,
             "RIGHT": 1,
@@ -22,36 +21,22 @@ reversed = {"UP": 0,
             "BOMB": 5
             }
 
-class Agent():
+
+class Agent:
     def __init__(self, AGENT_CONFIG, REWARD_CONFIG, training):
-        # ... (same initialization code as before)
         # Define a policy network
+        self.training = training
 
         self.agent_name = AGENT_CONFIG["agent_name"]
         self.config_name = AGENT_CONFIG["config_name"]
 
-
-        self.training = training
-
         self.state_dim = AGENT_CONFIG["state_dim"]
         self.action_dim = AGENT_CONFIG["action_dim"]
+        self.batch_size = AGENT_CONFIG["batch_size"]
         self.save_every = AGENT_CONFIG["save_every"]
         self.curr_step = 0
         self.since_last_save = 0  # fall back for the save_every
 
-        # Hyperparameters
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        if self.device == "cuda":
-            self.num_devices = torch.cuda.device_count()
-        else:
-            self.num_devices = 1
-
-
-        # setting up the network
-        self.net = BomberNet(input_dim=self.state_dim, output_dim=self.action_dim).float()
-        self.net = self.net.to(self.device)
-
-        self.exploration_method = AGENT_CONFIG["exploration_method"]
         self.gamma = AGENT_CONFIG["gamma"]
         self.lamb = AGENT_CONFIG["lambda"]
         self.worker_steps = AGENT_CONFIG["worker_steps"]
@@ -60,40 +45,85 @@ class Agent():
         self.lr = AGENT_CONFIG["learning_rate"]
 
         self.rewards = []
-        self.save_directory = "./models"
-        self.batch_size = self.worker_steps
         self.mini_batch_size = self.batch_size // self.n_mini_batch
-        # TODO: implement
-        self.obs = State().new_round()
-        self.policy = PolicyNetwork().to(device)
-        self.mse_loss = nn.MSELoss()
+
+        # Hyperparameters
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        if self.device == "cuda":
+            self.num_devices = torch.cuda.device_count()
+        else:
+            self.num_devices = 1
+
+        self.save_dir = "./models"
+
+        # setting up the network
+        self.policy = PolicyNetwork().to(self.device)
+
+        # optimizer
         self.optimizer = torch.optim.Adam([
             {'params': self.policy.actor.parameters(), 'lr': self.lr},
-            {'params': self.policy.critic.parameters(), 'lr': self.lr} # do we need different lrs?
+            {'params': self.policy.critic.parameters(), 'lr': self.lr}  # do we need different lrs?
         ], eps=1e-4)
-        self.policy_old = PolicyNetwork().to(device)
+
+        # discount factor
+        self.mse_loss = nn.MSELoss()
+
+        self.policy_old = PolicyNetwork().to(self.device)
         self.policy_old.load_state_dict(self.policy.state_dict())
         self.all_episode_rewards = []
         self.all_mean_rewards = []
         self.episode = 0
 
-
         self.REWARD_CONFIG = REWARD_CONFIG
 
-        if AGENT_CONFIG["load"] == True:  # load model :D
-            self.load(AGENT_CONFIG["load_path"])
+        if AGENT_CONFIG["load"]:  # load model :D
+            self.load_checkpoint(AGENT_CONFIG["load_path"])
 
+    def act(self, features, state=None):
+        if self.exploration_method == "epsilon-greedy" and self.training == True:
+            if np.random.rand() < self.exploration_rate:
+                if np.random.rand() < self.imitation_learning_rate and self.imitation_learning:
+                    try:
+                        action_idx = reversed[self.imitation_learning_expert.act(state)]
+                    except:
+                        action_idx = np.random.randint(self.action_dim)
+                else:
+                    action_idx = np.random.randint(self.action_dim)
+            else:
+                action_values = self.net(features, model="online")
+                action_idx = torch.argmax(action_values, axis=1).item()
+        elif self.exploration_method == "boltzmann" and self.training == True:
+            action_values = self.net(features, model="online")
+            probabilities = torch.softmax(action_values / self.temperature, dim=-1)
+            action_idx = torch.multinomial(probabilities, 1).item()
+        elif self.training:
+            raise ValueError("exploration_method must be epsilon-greedy or boltzmann")
+        else:
+            action_values = self.net(features, model="online")
+            action_idx = torch.argmax(action_values, axis=1).item()
+
+        self.exploration_rate *= self.exploration_rate_decay
+        self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
+
+        self.imitation_learning_rate *= self.imitation_learning_decay
+        self.imitation_learning_rate = max(self.imitation_learning_rate, self.imitation_learning_min)
+        if self.lr_scheduling:
+            self.lr_scheduler.step()
+            for param_group in self.net.optimizer.param_groups:
+                param_group['lr'] = max(param_group['lr'], self.lr_scheduler_min)
+
+        self.curr_step += 1
+        return action_idx
 
     def save_checkpoint(self):
-        filename = os.path.join(self.save_directory, 'checkpoint_{}.pth'.format(self.episode))
+        filename = os.path.join(self.save_dir, 'checkpoint_{}.pth'.format(self.episode))
         torch.save(self.policy_old.state_dict(), f=filename)
         print('Checkpoint saved to \'{}\''.format(filename))
 
     def load_checkpoint(self, filename):
-        self.policy.load_state_dict(torch.load(os.path.join(self.save_directory, filename)))
-        self.policy_old.load_state_dict(torch.load(os.path.join(self.save_directory, filename)))
+        self.policy.load_state_dict(torch.load(os.path.join(self.save_dir, filename)))
+        self.policy_old.load_state_dict(torch.load(os.path.join(self.save_dir, filename)))
         print('Resuming training from checkpoint \'{}\'.'.format(filename))
-
 
     def calculate_loss(self, samples, clip_range):
         sampled_returns = samples['returns']
@@ -107,7 +137,7 @@ class Agent():
         loss = -policy_reward + 0.5 * vf_loss - 0.01 * entropy_bonus
         return loss.mean()
 
-    def train(self, memory,clip_range):
+    def train(self, memory, clip_range):
         samples = memory.get_samples()
         indexes = torch.randperm(self.batch_size)
         for start in range(0, self.batch_size, self.mini_batch_size):

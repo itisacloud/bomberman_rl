@@ -9,10 +9,9 @@ from torch import nn
 from torch.cuda import device
 from torch.distributions import Categorical
 from torch.nn.parallel import DataParallel  # Import DataParallel
+from Memory import Memory
 
-from .cache import Memory
-
-actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
+actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', "BOMB"]
 
 reversed = {"UP": 0,
             "RIGHT": 1,
@@ -21,6 +20,7 @@ reversed = {"UP": 0,
             "WAIT": 4,
             "BOMB": 5
             }
+
 
 class PolicyNetwork(nn.Module):
     def __init__(self):
@@ -50,9 +50,8 @@ class PolicyNetwork(nn.Module):
             nn.Linear(512, 1)
         )
 
-
-    def forward(self, obs):
-        return Categorical(logits=self.actor(obs)), self.critic(obs).reshape(-1)
+    def forward(self, features):
+        return Categorical(logits=self.actor(features)), self.critic(features).reshape(-1)
 
 
 class PPO:
@@ -66,9 +65,8 @@ class PPO:
         self.save_directory = "./mario_ppo"
         self.batch_size = self.worker_steps
         self.mini_batch_size = self.batch_size // self.n_mini_batch
-        # TODO:
-        self.obs = State(window_size=1).new_round()
-        self.policy = PolicyNetwork().to(device)
+
+        self.policy = PolicyNetwork.to(device)
         self.mse_loss = nn.MSELoss()
         self.optimizer = torch.optim.Adam([
             {'params': self.policy.actor.parameters(), 'lr': 0.00025},
@@ -172,6 +170,3 @@ class PPO:
         vf_loss = self.mse_loss(value, sampled_returns)
         loss = -policy_reward + 0.5 * vf_loss - 0.01 * entropy_bonus
         return loss.mean()
-
-
-
