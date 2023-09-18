@@ -10,7 +10,7 @@ AGENT_CONFIG:
   # training
   batch_size: 32
   memory_size: 20000
-  burnin: 5000
+  burnin: 100
   learn_evry: 1
   sync_evry: 1000
   gamma: 0.95
@@ -24,9 +24,14 @@ AGENT_CONFIG:
   lr_scheduler_min: 0.00001
   loss_fn: MSE
   lr_scheduler: True
+
+
+  # Info
   draw_plot: True
   mode_plot: static # "static" or "dynamic"
-  draw_plot_every: 10
+  draw_plot_every: 1000
+  debuggin: True
+  debuggin_freq: 1000
 
   # Exploration
   exploration_method: epsilon-greedy

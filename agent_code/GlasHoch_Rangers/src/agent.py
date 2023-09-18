@@ -19,6 +19,8 @@ reversed = {"UP": 0,
             "BOMB": 5
             }
 
+
+
 class Agent():
     def __init__(self,AGENT_CONFIG,REWARD_CONFIG,training):
 
@@ -72,24 +74,25 @@ class Agent():
 
         # discount factor
         if AGENT_CONFIG["loss_fn"] == "MSE":
-            self.loss_fn = torch.nn.MSELoss()
+            self.net.loss_fn = torch.nn.MSELoss()
         elif AGENT_CONFIG["loss_fn"] == "SmoothL1":
-            self.loss_fn = torch.nn.SmoothL1Loss()
+            self.net.loss_fn = torch.nn.SmoothL1Loss()
         else:
             raise ValueError("loss_fn must be either MSE or SmoothL1")
 
         # optimizer
         if AGENT_CONFIG["optimizer"]=="Adam":
-            self.optimizer = torch.optim.Adam(self.net.parameters(), lr=AGENT_CONFIG["learning_rate"])
+            self.net.noptimizer = torch.optim.Adam(self.net.parameters(), lr=AGENT_CONFIG["learning_rate"])
         elif AGENT_CONFIG["optimizer"]=="AdamW":
-            self.optimizer  = torch.optim.AdamW(self.net.parameters(), lr=AGENT_CONFIG["learning_rate"])
+            self.net.optimizer  = torch.optim.AdamW(self.net.parameters(), lr=AGENT_CONFIG["learning_rate"])
         else:
             raise "Undifined optimizer, currently supported Adam and AdamW"
+
         if AGENT_CONFIG["lr_scheduler"] == True: #implement lr scheduler later
             self.lr_scheduling = True
             self.lr_scheduler_step = AGENT_CONFIG["lr_scheduler_step"]
             self.lr_scheduler_gamma = AGENT_CONFIG["lr_scheduler_gamma"]
-            self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=self.lr_scheduler_step,
+            self.lr_scheduler = torch.optim.lr_scheduler.StepLR(self.net.optimizer, step_size=self.lr_scheduler_step,
                                                                 gamma=self.lr_scheduler_gamma)
             self.lr_scheduler_min = AGENT_CONFIG["lr_scheduler_min"]
 
@@ -97,11 +100,18 @@ class Agent():
 
         if AGENT_CONFIG["load"] == True: # load model :D
             self.load(AGENT_CONFIG["load_path"])
+        self.debuggin = AGENT_CONFIG["debuggin"]
+        if self.debuggin == True:
+            self.debuggin_freq = AGENT_CONFIG["debuggin_freq"]
+            self.previous_weight_norms = []
+
+
 
 
 
     def learn(self,memory):
         if self.curr_step % self.sync_every == 0:
+            print("syncing")
             self.sync_Q_target()
 
         self.save() # move check to save function
@@ -122,14 +132,28 @@ class Agent():
 
         # Backpropagate loss through Q_online
         loss = self.update_Q_online(td_est, td_tgt)
+
+        if self.debuggin:
+            if self.curr_step  % self.debuggin_freq == 0:
+                weight_norms = self.calculate_weight_norms()
+                if len(self.previous_weight_norms) > 1:
+                    weight_norm_differences = [abs(weight_norm - self.previous_weight_norms[-1][i]) for i, weight_norm
+                                               in enumerate(weight_norms)]
+                    print(f"weight_norm_differences = {weight_norm_differences}, \n "
+                          f"weight_norms_diffrences_sum = {sum(weight_norm_differences)}, \n"
+                          f"learning_rate: {self.lr_scheduler.get_lr()},\n "
+                          f"exploration_rate: {self.exploration_rate},\n "
+                          f"imitation_learning_rate: {self.imitation_learning_rate}, \n"
+                          f"current_step: {self.curr_step}\n")
+                self.previous_weight_norms.append(weight_norms)
         return (td_est.mean().item(), loss)
 
     # the follwoing four functions are from the tutorial and only slightly modified, is this allowed?
     def update_Q_online(self, td_estimate, td_target):
-        loss = self.loss_fn(td_estimate, td_target)
-        self.optimizer.zero_grad()
+        loss = self.net.loss_fn(td_estimate, td_target)
+        self.net.optimizer.zero_grad()
         loss.backward()
-        self.optimizer.step()
+        self.net.optimizer.step()
         return loss.item()
 
     def sync_Q_target(self):
@@ -140,6 +164,10 @@ class Agent():
         action_tensor = torch.tensor(action, dtype=torch.long)
         current_Q = self.net(state, model="online")[indices, action_tensor]
         return current_Q
+
+    def calculate_weight_norms(self):
+        weight_norms = [torch.norm(p) for p in self.net.parameters()]
+        return weight_norms
 
     @torch.no_grad()
     def td_target(self, reward, next_state, done):
@@ -183,7 +211,7 @@ class Agent():
         self.imitation_learning_rate = max(self.imitation_learning_rate,self.imitation_learning_min)
         if self.lr_scheduling:
             self.lr_scheduler.step()
-            for param_group in self.optimizer.param_groups:
+            for param_group in self.net.optimizer.param_groups:
                 param_group['lr'] = max(param_group['lr'], self.lr_scheduler_min)
 
         self.curr_step += 1
@@ -237,8 +265,8 @@ class Agent():
                         'sync_every': self.sync_every,
                         'exploration_method': self.exploration_method,
                         'gamma': self.gamma,
-                        'loss_fn': str(self.loss_fn).split(".")[-1],  # Extract the loss function name
-                        'learning_rate': self.optimizer.param_groups[0]['lr'],
+                        'loss_fn': str(self.net.loss_fn).split(".")[-1],  # Extract the loss function name
+                        'learning_rate': self.net.optimizer.param_groups[0]['lr'],
                         'lr_scheduler': self.lr_scheduling,
                         'lr_scheduler_step': self.lr_scheduler_step,
                         'lr_scheduler_gamma': self.lr_scheduler_gamma,
@@ -289,8 +317,8 @@ class Agent():
         config_str += f"Sync Every: {self.sync_every}\n"
         config_str += f"Exploration Method: {self.exploration_method}\n"
         config_str += f"Gamma: {self.gamma}\n"
-        config_str += f"Loss Function: {self.loss_fn}\n"
-        config_str += f"Optimizer: {self.optimizer}\n"
+        config_str += f"Loss Function: {self.net.loss_fn}\n"
+        config_str += f"Optimizer: {self.net.optimizer}\n"
         config_str += f"LR Scheduler: {self.lr_scheduling}\n"
         config_str += f"LR Scheduler Step: {self.lr_scheduler_step}\n"
         config_str += f"LR Scheduler Gamma: {self.lr_scheduler_gamma}\n"

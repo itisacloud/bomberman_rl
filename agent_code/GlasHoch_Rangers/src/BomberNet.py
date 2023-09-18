@@ -48,6 +48,9 @@ class BomberNet(nn.Module):
 
         self.online = DataParallel(self.online)  # Wrap the online network in DataParallel
         self.target = DataParallel(self.target)  # Wrap the target network in DataParallel
+
+        self.loss_fn = nn.MSELoss() #default loss
+        self.optimizer = torch.optim.Adam(self.online.parameters(), lr=0.00001) #default optimizer
     def forward(self, input, model):
         input = input.unsqueeze(0)
         if len(input.shape) == 5:
