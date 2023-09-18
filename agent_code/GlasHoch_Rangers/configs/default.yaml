@@ -18,10 +18,10 @@ AGENT_CONFIG:
   # Training learning rates etc:
   optimizer: AdamW
 
-  learning_rate: 0.0000025
+  learning_rate: 0.00002
   lr_scheduler_step: 10000
   lr_scheduler_gamma: 0.975
-  lr_scheduler_min: 0.0000001
+  lr_scheduler_min: 0.000001
   loss_fn: MSE
   lr_scheduler: True
 
@@ -31,7 +31,7 @@ AGENT_CONFIG:
   mode_plot: static # "static" or "dynamic"
   draw_plot_every: 100000
   debuggin: True
-  debuggin_freq: 100
+  debuggin_freq: 1000
 
   # Exploration
   exploration_method: epsilon-greedy
