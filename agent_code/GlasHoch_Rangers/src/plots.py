@@ -84,7 +84,7 @@ class plot:
 
             if len(self.loss_history) >= self.running_mean_window_games*10:
                 running_mean_loss = np.convolve(self.loss_history,
-                                                np.ones(self.running_mean_window_games*10) / self.running_mean_window_games*10,
+                                                np.ones(self.running_mean_window_games*10) / (self.running_mean_window_games*10),
                                                 mode='valid')
                 self.ax.plot(range(self.running_mean_window_games*10, len(running_mean_loss) + self.running_mean_window_games*10),
                              running_mean_loss, label='Running Mean Loss', color='red')

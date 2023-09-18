@@ -46,7 +46,7 @@ class Agent():
         else:
             self.imitation_learning_expert_name = "no_expert"
 
-        self.state_dim = AGENT_CONFIG["state_dim"]
+        self.features_dim = AGENT_CONFIG["state_dim"]
         self.action_dim = AGENT_CONFIG["action_dim"]
         self.batch_size = AGENT_CONFIG["batch_size"]
         self.save_every = AGENT_CONFIG["save_every"]
@@ -63,7 +63,7 @@ class Agent():
         self.save_dir = "./models"
 
         # setting up the network
-        self.net = BomberNet(input_dim=self.state_dim, output_dim=self.action_dim).float()
+        self.net = BomberNet(input_dim=self.features_dim, output_dim=self.action_dim).float()
         self.net = self.net.to(self.device)
 
         self.burnin = AGENT_CONFIG["burnin"]  # min. experiences before training
@@ -122,13 +122,13 @@ class Agent():
         if self.curr_step % self.learn_every != 0:
             return None, None
 
-        new_state, old_state, action, reward, done = memory.sample(self.batch_size)
+        old_features, new_features, action, reward, done = memory.sample(self.batch_size)
 
         # Get TD Estimate
-        td_est = self.td_estimate(old_state, action)
+        td_est = self.td_estimate(old_features, action)
 
         # Get TD Target
-        td_tgt = self.td_target(reward, new_state, done)
+        td_tgt = self.td_target(reward, new_features, done)
 
         # Backpropagate loss through Q_online
         loss = self.update_Q_online(td_est, td_tgt)
@@ -159,10 +159,10 @@ class Agent():
     def sync_Q_target(self):
         self.net.target.load_state_dict(self.net.online.state_dict())
 
-    def td_estimate(self, state, action):
+    def td_estimate(self, features, action):
         indices = torch.tensor(np.arange(0, self.batch_size), dtype=torch.long)
         action_tensor = torch.tensor(action, dtype=torch.long)
-        current_Q = self.net(state, model="online")[indices, action_tensor]
+        current_Q = self.net(features, model="online")[indices, action_tensor]
         return current_Q
 
     def calculate_weight_norms(self):
@@ -170,11 +170,11 @@ class Agent():
         return weight_norms
 
     @torch.no_grad()
-    def td_target(self, reward, next_state, done):
-        next_state_Q_online = self.net(next_state, model="online")
+    def td_target(self, reward, new_features, done):
+        next_state_Q_online = self.net(new_features, model="online")
         best_action_online = torch.argmax(next_state_Q_online, axis=1)
 
-        next_state_Q_target = self.net(next_state, model="target")
+        next_state_Q_target = self.net(new_features, model="target")
         next_Q_values = next_state_Q_target[np.arange(0, self.batch_size), best_action_online]
 
         td_targets = (reward + (1 - done.float()) * self.gamma * next_Q_values).float()
@@ -256,7 +256,7 @@ class Agent():
                         'imitation_learning_min': self.imitation_learning_min,
                         'imitation_learning_expert': self.imitation_learning_expert_name,
                         'imitation_learning_expert_name': self.imitation_learning_expert_name,
-                        'state_dim': self.state_dim,
+                        'state_dim': self.features_dim,
                         'action_dim': self.action_dim,
                         'batch_size': self.batch_size,
                         'save_every': self.save_every,
@@ -304,7 +304,7 @@ class Agent():
         config_str += f"Imitation Learning Min: {self.imitation_learning_min}\n"
         config_str += f"Imitation Learning Expert: {self.imitation_learning_expert}\n"
         config_str += f"Imitation Learning Expert Name: {self.imitation_learning_expert_name}\n"
-        config_str += f"State Dimension: {self.state_dim}\n"
+        config_str += f"State Dimension: {self.features_dim}\n"
         config_str += f"Action Dimension: {self.action_dim}\n"
         config_str += f"Batch Size: {self.batch_size}\n"
         config_str += f"Save Every: {self.save_every}\n"

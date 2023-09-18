@@ -13,7 +13,7 @@ rotated_actions = {
 
 
 class Memory:
-    def rotateFeature(self, rots,feature):
+    def rotateFeature(self, rots, feature):
         return torch.rot90(feature, rots, (0, 1))
 
     def rotateFeatures(self, rots,features):
@@ -33,8 +33,8 @@ class Memory:
         self.index = 0
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        self.states = torch.zeros((size, *input_dim), dtype=torch.float32).to(self.device)
-        self.next_states = torch.zeros((size, *input_dim), dtype=torch.float32).to(self.device)
+        self.features = torch.zeros((size, *input_dim), dtype=torch.float32).to(self.device)
+        self.new_features = torch.zeros((size, *input_dim), dtype=torch.float32).to(self.device)
         self.actions = torch.zeros((size), dtype=torch.int32).to(self.device)
         self.rewards = torch.zeros((size), dtype=torch.int32).to(self.device)
         self.done = torch.zeros((size), dtype=torch.bool).to(self.device)
@@ -43,8 +43,8 @@ class Memory:
     def cache(self, state: torch.Tensor, next_state: torch.Tensor, action: int, reward: int, done: bool):
         if self.index >= self.size:
             self.index = 0
-        self.states[self.index] = state
-        self.next_states[self.index] = next_state
+        self.features[self.index] = state
+        self.new_features[self.index] = next_state
         self.actions[self.index] = action
         self.rewards[self.index] = reward
         self.done[self.index] = done
@@ -59,17 +59,17 @@ class Memory:
         rotation = torch.randint(0, 4, (batch_size,),device=self.device)
 
         if np.random.rand() < 0.5:
-            rotated_states = self.states[indices]
-            rotated_next_states = self.next_states[indices]
+            rotated_features = self.features[indices]
+            rotated_new_features = self.new_features[indices]
             rotated_actions = self.actions[indices]
         else:
-            rotated_states = torch.stack([self.rotateFeatures(rot, self.states[idx]) for idx, rot in zip(indices, rotation)])
-            rotated_next_states = torch.stack([self.rotateFeatures(rot, self.next_states[idx]) for idx, rot in zip(indices, rotation)])
+            rotated_features = torch.stack([self.rotateFeatures(rot, self.features[idx]) for idx, rot in zip(indices, rotation)])
+            rotated_new_features = torch.stack([self.rotateFeatures(rot, self.new_features[idx]) for idx, rot in zip(indices, rotation)])
             rotated_actions = torch.tensor([self.rotateAction(rot, self.actions[idx]) for idx, rot in zip(indices, rotation)], dtype=torch.int32)
 
         return (
-            rotated_states,
-            rotated_next_states,
+            rotated_features,
+            rotated_new_features,
             rotated_actions,
             self.rewards[indices].squeeze(),
             self.done[indices].squeeze()
