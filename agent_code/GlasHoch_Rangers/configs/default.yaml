@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_run_start_easy
+  agent_name: GlasHoch_long_run_start_easy_no_imitation
   config_name: default
 
   # dimensions (change only when features change)
@@ -18,10 +18,10 @@ AGENT_CONFIG:
   # Training learning rates etc:
   optimizer: AdamW
 
-  learning_rate: 0.00002
-  lr_scheduler_step: 10000
-  lr_scheduler_gamma: 0.975
-  lr_scheduler_min: 0.000001
+  learning_rate: 0.001
+  lr_scheduler_step: 1
+  lr_scheduler_gamma: 0.999993
+  lr_scheduler_min: 0.00001
   loss_fn: MSE
   lr_scheduler: True
 
@@ -41,7 +41,7 @@ AGENT_CONFIG:
 
 
   # Imitation Learning
-  imitation_learning: True
+  imitation_learning: False
   imitation_learning_rate: 1
   imitation_learning_decay: 0.999995
   imitation_learning_min: 0.1
@@ -49,7 +49,7 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: False
-  load_path: /models/GlasHoch_first_run_start_easy_parallel_default_210000.pth
+  load_path: /models/GlasHoch_long_run_start_easy_part_2_from_step_360k_default_150000.pth
 
 
   save_every: 10000
