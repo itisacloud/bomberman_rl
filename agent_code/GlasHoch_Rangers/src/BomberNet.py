@@ -51,6 +51,7 @@ class BomberNet(nn.Module):
 
         self.loss_fn = nn.MSELoss() #default loss
         self.optimizer = torch.optim.Adam(self.online.parameters(), lr=0.00001) #default optimizer
+
     def forward(self, input, model):
         input = input.unsqueeze(0)
         if len(input.shape) == 5:

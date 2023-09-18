@@ -36,7 +36,7 @@ class Memory:
         self.features = torch.zeros((size, *input_dim), dtype=torch.float32).to(self.device)
         self.new_features = torch.zeros((size, *input_dim), dtype=torch.float32).to(self.device)
         self.actions = torch.zeros((size), dtype=torch.int32).to(self.device)
-        self.rewards = torch.zeros((size), dtype=torch.int32).to(self.device)
+        self.rewards = torch.zeros((size), dtype=torch.float32).to(self.device)
         self.done = torch.zeros((size), dtype=torch.bool).to(self.device)
 
 

@@ -8,6 +8,7 @@ import yaml
 
 from .BomberNet import BomberNet
 from .expert import Expert
+import torch.nn.init as init
 
 actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
 
@@ -22,6 +23,13 @@ reversed = {"UP": 0,
 
 
 class Agent():
+
+    def initialize_weights_he(self,model):
+        for module in model.modules():
+            if isinstance(module, (torch.nn.Linear, torch.nn.Conv2d)):
+                init.kaiming_uniform_(module.weight, mode='fan_in', nonlinearity='relu')
+                if module.bias is not None:
+                    init.constant_(module.bias, 0)
     def __init__(self,AGENT_CONFIG,REWARD_CONFIG,training):
 
         self.training = training
@@ -67,7 +75,8 @@ class Agent():
         # setting up the network
         self.net = BomberNet(input_dim=self.features_dim, output_dim=self.action_dim).float()
         self.net = self.net.to(self.device)
-
+        if AGENT_CONFIG["load"] == False:
+            self.initialize_weights_he(self.net)
         self.burnin = AGENT_CONFIG["burnin"]  # min. experiences before training
         self.learn_every = AGENT_CONFIG["learn_evry"] # no. of experiences between updates to Q_online
         self.sync_every = AGENT_CONFIG["sync_evry"]  # no. of experiences between Q_target & Q_online sync
@@ -112,9 +121,6 @@ class Agent():
 
 
     def learn(self,memory):
-        if self.curr_step % self.sync_every == 0:
-            print("syncing")
-            self.sync_Q_target()
 
         self.save() # move check to save function
 
@@ -123,6 +129,10 @@ class Agent():
 
         if self.curr_step % self.learn_every != 0:
             return None, None
+
+        if self.curr_step % self.sync_every == 0:
+            print("syncing")
+            self.sync_Q_target()
 
         old_features, new_features, action, reward, done = memory.sample(self.batch_size)
 
@@ -147,12 +157,12 @@ class Agent():
                           f"exploration_rate: {self.exploration_rate},\n "
                           f"imitation_learning_rate: {self.imitation_learning_rate}, \n"
                           f"current_step: {self.curr_step}\n"
-                          f"action {action[0]} \n"
-                          f"reward {reward[0]} \n"
-                          f"td_est {td_est[0]} \n"
-                          f"td_tgt {td_tgt[0]} \n"
-                          f"online Qs {self.net(old_features, model='online')[0]}\n"
-                          f"target Qs {self.net(old_features, model='target')[0]}\n")
+                          f"action {action} \n"
+                          f"reward {reward} \n"
+                          f"td_est {td_est} \n"
+                          f"td_tgt {td_tgt} \n"
+                          f"online Qs {self.net(old_features, model='online')}\n"
+                          f"target Qs {self.net(old_features, model='target')}\n")
 
 
                 self.previous_weight_norms.append(weight_norms)

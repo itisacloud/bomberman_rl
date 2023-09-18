@@ -131,8 +131,11 @@ class State:
         return None
 
     def normalize_idw_map(self,idw_map):
+
         min_value = np.min(idw_map)
         max_value = np.max(idw_map)
+        if max_value == min_value:
+            return idw_map
         normalized_map = (idw_map - min_value) / (max_value - min_value)
         return normalized_map
 

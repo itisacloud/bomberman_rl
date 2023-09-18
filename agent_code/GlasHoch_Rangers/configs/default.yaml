@@ -10,7 +10,7 @@ AGENT_CONFIG:
   # training
   batch_size: 32
   memory_size: 10000
-  burnin: 5000
+  burnin: 1000
   learn_evry: 1
   sync_evry: 1000
   gamma: 0.95
@@ -18,10 +18,10 @@ AGENT_CONFIG:
   # Training learning rates etc:
   optimizer: AdamW
 
-  learning_rate: 0.000025
+  learning_rate: 0.0000025
   lr_scheduler_step: 10000
   lr_scheduler_gamma: 0.975
-  lr_scheduler_min: 0.00001
+  lr_scheduler_min: 0.0000001
   loss_fn: MSE
   lr_scheduler: True
 
@@ -31,7 +31,7 @@ AGENT_CONFIG:
   mode_plot: static # "static" or "dynamic"
   draw_plot_every: 100000
   debuggin: True
-  debuggin_freq: 1000
+  debuggin_freq: 100
 
   # Exploration
   exploration_method: epsilon-greedy
@@ -48,7 +48,7 @@ AGENT_CONFIG:
   imitation_learning_expert: rule_based_agent
 
   # checkpointing model
-  load: True
+  load: False
   load_path: /models/GlasHoch_first_run_start_easy_parallel_default_210000.pth
 
 
@@ -56,27 +56,27 @@ AGENT_CONFIG:
 
 
 REWARD_CONFIG:
-  MOVED_LEFT: 1
-  MOVED_RIGHT: 1
-  MOVED_UP: 1
-  MOVED_DOWN:  1
-  WAITED: -2
-  INVALID_ACTION: -5
-  BOMB_DROPPED: 2 # 5
-  BOMB_EXPLODED: 0
-  CRATE_DESTROYED: 10
-  COIN_FOUND: 10
-  COIN_COLLECTED: 20
-  KILLED_OPPONENT: 50
-  KILLED_SELF: -20  # -10
-  GOT_KILLED: -10
-  MOVED_TOWARDS_COIN_CLUSTER: 2
-  MOVED_TOWARDS_ENEMY: 1
-  TRAPPED_ENEMY: 5
-  BOMB_NEAR_CRATE: 10
-  BOMB_NEAR_ENEMY: 30
-  OPPONENT_ELIMINATED: 1
-  SURVIVED_ROUND: 10
-  ALREADY_VISITED: -0.05
-  MOVED_OUT_OF_DANGER: 1
-  EXPERT_ACTION: 10
+  MOVED_LEFT: 0.1  # Normalize rewards to be within a reasonable range
+  MOVED_RIGHT: 0.1
+  MOVED_UP: 0.1
+  MOVED_DOWN: 0.1
+  WAITED: -0.2  # Negative rewards are also normalized
+  INVALID_ACTION: -0.5
+  BOMB_DROPPED: 0.2
+  BOMB_EXPLODED: 0.0  # No normalization needed for zero rewards
+  CRATE_DESTROYED: 1.0  # Adjusted for meaningful scale
+  COIN_FOUND: 1.0
+  COIN_COLLECTED: 2.0
+  KILLED_OPPONENT: 5.0
+  KILLED_SELF: -2.0
+  GOT_KILLED: -1.0
+  MOVED_TOWARDS_COIN_CLUSTER: 0.2
+  MOVED_TOWARDS_ENEMY: 0.1
+  TRAPPED_ENEMY: 0.5
+  BOMB_NEAR_CRATE: 1.0
+  BOMB_NEAR_ENEMY: 3.0
+  OPPONENT_ELIMINATED: 0.1
+  SURVIVED_ROUND: 1.0
+  ALREADY_VISITED: -0.005  # Scaled down for small impact
+  MOVED_OUT_OF_DANGER: 0.1
+  EXPERT_ACTION: 1.0
