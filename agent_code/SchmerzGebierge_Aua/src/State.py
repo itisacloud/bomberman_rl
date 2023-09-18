@@ -3,12 +3,11 @@ import heapq
 import numpy as np
 import torch
 
-
 rotations = [0, 1, 2, 3]
 
 
 class State:
-    def __init__(self, window_size,enemies=0):
+    def __init__(self, window_size, enemies=0):
         self.window_size = window_size
         self.new_round()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -28,10 +27,10 @@ class State:
         self.current_step = 0
 
     def window(self, map, position, window_size, constant=-1):
-        padded = np.pad(map, pad_width= window_size, mode='constant', constant_values=constant)
+        padded = np.pad(map, pad_width=window_size, mode='constant', constant_values=constant)
         return padded[position[0]:position[0] + 2 * window_size + 1, position[1]:position[1] + 2 * window_size + 1]
 
-    def extra_to_map(self,extra_features,field):
+    def extra_to_map(self, extra_features, field):
         maps = []
         for feature in extra_features:
             if feature == 0 or feature == False:
@@ -39,7 +38,7 @@ class State:
             else:
                 if feature == True:
                     feature = 1
-                maps.append(np.ones_like(field)*feature)
+                maps.append(np.ones_like(field) * feature)
         return np.array(maps)
 
     def get_blast_coords(self, field, bombs_pos, blast_strength):
@@ -128,16 +127,24 @@ class State:
                         path_matrix[new_x][new_y] = path_matrix[current[0]][current[1]] + [current]
 
         return None
+
+    def normalize_idw_map(self,idw_map):
+
+        min_value = np.min(idw_map)
+        max_value = np.max(idw_map)
+        if max_value == min_value:
+            return idw_map
+        normalized_map = (idw_map - min_value) / (max_value - min_value)
+        return normalized_map
+
     def paths_to_idw_matrix(self,field,paths):
         matrix = np.zeros_like(field,dtype=np.float32)
         for path in paths:
             if path is None:
                 continue
-            for i,pos_path in enumerate(path):
+            for i, pos_path in enumerate(path):
                 matrix[pos_path[0]][pos_path[1]] += 1 / len(path)
         return matrix
-
-
 
     def distance(self, pos1, pos2):
         return np.sum(np.abs(np.array(pos1) - np.array(pos2)))
@@ -176,19 +183,19 @@ class State:
 
         others = game_state['others']
 
-        self.enemies = max(self.enemies,len(others))
+        self.enemies = max(self.enemies, len(others))
 
         enemies_pos = [i[3] for i in others]
         enemies_bomb = [i[2] for i in others]
 
         if len(enemies_bomb) < self.enemies:
-            enemies_bomb += [False for _ in range(self.enemies-len(enemies_bomb))]
+            enemies_bomb += [False for _ in range(self.enemies - len(enemies_bomb))]
 
         explosion_map = self.get_explosion_map(field, bomb)
 
         enemies_pos_map = np.zeros_like(field)
 
-        # position of enemys on map
+        # position of enemies on map
         for i, pos in enumerate(enemies_pos):
             enemies_pos_map[pos[0], pos[1]] = 1
 
@@ -211,15 +218,15 @@ class State:
         coins_pos_map = self.window(coins_pos_map, agent_pos, self.window_size, constant=0)
         enemies_pos_map = self.window(enemies_pos_map, agent_pos, self.window_size, constant=0)
         reachabel_fields = self.window(reachabel_fields, agent_pos, self.window_size, constant=-1)
-        coins_idw_map = self.window(coins_idw_map, agent_pos, self.window_size, constant=0)
-        enemies_idw_map = self.window(enemies_idw_map, agent_pos, self.window_size, constant=0)
+        coins_idw_map = self.normalize_idw_map(self.window(coins_idw_map, agent_pos, self.window_size, constant=0))
+        enemies_idw_map = self.normalize_idw_map(self.window(enemies_idw_map, agent_pos, self.window_size, constant=0))
 
-        features = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,reachabel_fields,coins_idw_map,enemies_idw_map]) # get features
+        features = np.array([field, explosion_map, coins_pos_map, enemies_pos_map, reachabel_fields, coins_idw_map,
+                             enemies_idw_map])  # get features
 
         features = torch.tensor(features).to(torch.float32).to(self.device)
-        if self.test <= 1:
+        if self.test <= 10:
             print("features -------------------------")
-            print("pos",pos)
             print("field:")
             print(field)
             print("explosions")
