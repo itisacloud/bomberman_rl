@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_first_run_start_easy_parallel
+  agent_name: GlasHoch_long_run_start_easy
   config_name: default
 
   # dimensions (change only when features change)
@@ -29,22 +29,22 @@ AGENT_CONFIG:
   # Info
   draw_plot: True
   mode_plot: static # "static" or "dynamic"
-  draw_plot_every: 100
+  draw_plot_every: 10000
   debuggin: True
   debuggin_freq: 100
 
   # Exploration
   exploration_method: epsilon-greedy
   exploration_rate: 1
-  exploration_rate_decay: 0.9999988
-  exploration_rate_min: 0.15
+  exploration_rate_decay: 0.999998
+  exploration_rate_min: 0.1
 
 
   # Imitation Learning
   imitation_learning: True
-  imitation_learning_rate: 0.75
-  imitation_learning_decay: 0.9999977
-  imitation_learning_min: 0.2
+  imitation_learning_rate: 1
+  imitation_learning_decay: 0.999995
+  imitation_learning_min: 0.1
   imitation_learning_expert: rule_based_agent
 
   # checkpointing model
