@@ -1,5 +1,6 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_run_start_easy_no_imitation
+  agent_name: GlasHoch_long_runer_3rd_slightly_higher_lr_start_easy_no_imitation_default
+
   config_name: default
 
   # dimensions (change only when features change)
