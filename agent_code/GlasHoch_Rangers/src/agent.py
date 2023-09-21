@@ -51,8 +51,11 @@ class Agent():
         if self.imitation_learning:
             self.imitation_learning_expert_name =  self.imitation_learning_expert
             self.imitation_learning_expert = Expert(self.imitation_learning_expert)
+            self.imitation_learning_cutoff = AGENT_CONFIG["imitation_learning_cutoff"]
         else:
             self.imitation_learning_expert_name = "no_expert"
+
+
 
         self.features_dim = AGENT_CONFIG["state_dim"]
         self.action_dim = AGENT_CONFIG["action_dim"]
@@ -168,7 +171,11 @@ class Agent():
                 self.previous_weight_norms.append(weight_norms)
         return (td_est.mean().item(), loss)
 
-    # the follwoing four functions are from the tutorial and only slightly modified, is this allowed?
+    def calculate_weight_norms(self):
+        weight_norms = [torch.norm(p) for p in self.net.parameters()]
+        return weight_norms
+
+    # the follwoing four functions are from the tutorial and only slightly modified, is this allowed? IMO its just a basic translation of the DQN algorithm and pretty basic
     def update_Q_online(self, td_estimate, td_target):
         loss = self.net.loss_fn(td_estimate, td_target)
         self.net.optimizer.zero_grad()
@@ -185,10 +192,6 @@ class Agent():
         current_Q = self.net(features, model="online")[indices, action_tensor]
         return current_Q
 
-    def calculate_weight_norms(self):
-        weight_norms = [torch.norm(p) for p in self.net.parameters()]
-        return weight_norms
-
     @torch.no_grad()
     def td_target(self, reward, new_features, done):
         next_state_Q_online = self.net(new_features, model="online")
@@ -203,6 +206,8 @@ class Agent():
     def act(self,features,state = None):
         if self.exploration_method == "epsilon-greedy" and self.training == True:
             if np.random.rand() < self.exploration_rate:
+                if self.curr_step > self.imitation_learning_cutoff:
+                    self.imitation_learning = False
                 if np.random.rand() < self.imitation_learning_rate and self.imitation_learning:
                     try:
                         action_idx = reversed[self.imitation_learning_expert.act(state)]

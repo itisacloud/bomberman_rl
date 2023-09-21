@@ -18,10 +18,10 @@ AGENT_CONFIG:
   # Training learning rates etc:
   optimizer: AdamW
 
-  learning_rate: 0.001
+  learning_rate: 0.00025
   lr_scheduler_step: 1
-  lr_scheduler_gamma: 0.999993
-  lr_scheduler_min: 0.00001
+  lr_scheduler_gamma: 0.999995
+  lr_scheduler_min: 0.0001
   loss_fn: MSE
   lr_scheduler: True
 
@@ -35,10 +35,9 @@ AGENT_CONFIG:
 
   # Exploration
   exploration_method: epsilon-greedy
-  exploration_rate: 1
+  exploration_rate: 0.15
   exploration_rate_decay: 0.999998
-  exploration_rate_min: 0.1
-
+  exploration_rate_min: 0.075
 
   # Imitation Learning
   imitation_learning: False
@@ -46,14 +45,13 @@ AGENT_CONFIG:
   imitation_learning_decay: 0.999995
   imitation_learning_min: 0.1
   imitation_learning_expert: rule_based_agent
+  imitation_learning_cutoff: 100000
 
   # checkpointing model
-  load: False
-  load_path: /models/GlasHoch_long_run_start_easy_part_2_from_step_360k_default_150000.pth
-
+  load: True
+  load_path: /models/GlasHoch_long_runer_2nd_slightly_higher_lr_start_easy_no_imitation_default_1000000.pth
 
   save_every: 10000
-
 
 REWARD_CONFIG:
   MOVED_LEFT: 0.1  # Normalize rewards to be within a reasonable range

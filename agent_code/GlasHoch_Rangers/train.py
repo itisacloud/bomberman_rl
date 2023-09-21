@@ -21,7 +21,9 @@ def setup_training(self):
     self.reward_handler = RewardHandler(self.REWARD_CONFIG)
     self.memory = Memory(input_dim=self.AGENT_CONFIG["state_dim"], size=self.AGENT_CONFIG["memory_size"])
     self.past_rewards = []
-    self.past_events = defaultdict(list)
+    self.past_events = []
+    self.past_Qs = []
+    self.past_actions = []
     self.past_events_count = defaultdict(int)
     self.past_movements = defaultdict(int)
 
@@ -41,37 +43,36 @@ def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_s
     else:
         expert_action = False
     own_action = int(actions.index(own_action))
-    reward = self.reward_handler.reward_from_state(new_game_state, old_game_state, new_features, old_features, events,expert_action,self.agent.imitation_learning_rate)
+    reward ,events = self.reward_handler.reward_from_state(new_game_state, old_game_state, new_features, old_features, events,expert_action,self.agent.imitation_learning_rate)
     done = False
+    self.past_Qs.append(self.agent.net(old_features,model="online"))
     self.memory.cache(old_features, new_features, own_action, reward, done)
     td_estimate, loss = self.agent.learn(self.memory)
     exploration_rate = self.agent.exploration_rate
-    for event in events:
-        self.past_events_count[event] += 1
-
-    self.past_movements[own_action] += 1
 
     if self.draw_plot:
         self.plot.append(loss, exploration_rate,reward,self.agent.imitation_learning_rate)
         self.plot.update()
         if self.agent.curr_step % self.agent.save_every == 0:
             self.plot.save(self.agent.agent_name)
-
+    for event in events:
+        self.past_events_count[event] += 1
+    self.past_events.append(events)
+    self.past_rewards.append(reward)
+    self.past_actions.append(own_action)
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
+
     self.total_reward = 0
     features = self.last_features
     own_action = int(actions.index(last_action))
-    reward = self.reward_handler.reward_from_state(last_game_state, last_game_state, features, features, events,expert_action=False)
+    reward,events = self.reward_handler.reward_from_state(last_game_state, last_game_state, features, features, events,expert_action=False)
     self.total_reward += reward
+    self.past_Qs.append(self.agent.net(features,model="online"))
+    self.past_actions.append(own_action)
 
     done = True
     self.memory.cache(features, features, own_action, reward, done)
     td_estimate, loss = self.agent.learn(self.memory)
-
-    for event in events:
-        self.past_events_count[event] += 1
-
-    self.past_movements[own_action] += 1
 
     self.agent.save()
 
@@ -80,6 +81,20 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
         if self.agent.curr_step % self.agent.save_every == 0:
             self.plot.save(self.agent.agent_name)
 
+    for event in events:
+        self.past_events_count[event] += 1
+    self.past_events.append(events)
+    self.past_rewards.append(reward)
+
+
+
+    print(self.past_events_count)
+    print([f" {events} : {reward} | {action} : {Qs} \n" for events,reward,action,Qs in zip(self.past_events,self.past_rewards,self.past_actions,self.past_Qs)])
+    self.past_events_count = defaultdict(int)
+    self.past_events = []
+    self.past_rewards = []
+    self.past_Qs = []
+    self.past_actions = []
     self.reward_handler.new_round()
 
 
@@ -116,9 +131,6 @@ class RewardHandler:
 
         movement_reward = 0
 
-        if expert_action:
-            reward += self.REWARD_CONFIG["EXPERT_ACTION"] * expert_ratio
-
         if not np.all(own_move == np.array([0, 0])):
             self.moves.append(own_move) #only append movements
 
@@ -130,12 +142,18 @@ class RewardHandler:
             except:
                 print(f"No reward defined for event {event}")
 
+        if expert_action:
+            reward += self.REWARD_CONFIG["EXPERT_ACTION"] * expert_ratio
+            events.append("EXPERT_ACTION")
+
         try:
             if "BOMB_DROPPED" in events and min(
                     [self.state_processor.distance(own_position, enemy) for enemy in enemy_positions]) < 3:
                 reward += self.REWARD_CONFIG["BOMB_NEAR_ENEMY"]
+                events.append("BOMB_NEAR_ENEMY")
                 if min([self.state_processor.distance(own_position, enemy) for enemy in enemy_positions]) < 1:
                     reward += self.REWARD_CONFIG["BOMB_NEAR_ENEMY"] * 2
+                    events.append("BOMB_NEAR_ENEMY_VERY_CLOSE")
         except:
             pass
 
@@ -146,25 +164,28 @@ class RewardHandler:
                     old_features[5][int(center[0] + own_move[0]), int(center[1] + own_move[1])]:
                 reward += self.REWARD_CONFIG["MOVED_TOWARDS_COIN_CLUSTER"]
                 movement_reward += self.REWARD_CONFIG["MOVED_TOWARDS_COIN_CLUSTER"]
+                events.append("MOVED_TOWARDS_COIN_CLUSTER")
             if max([old_features[6][int(center[0] + pos[0])][int(center[1] + pos[1])] for pos in moves]) == \
                     old_features[6][int(center[0] + own_move[0]), int(center[1] + own_move[1])]:
                 reward += self.REWARD_CONFIG["MOVED_TOWARDS_ENEMY"]
                 movement_reward += self.REWARD_CONFIG["MOVED_TOWARDS_ENEMY"]
+                events.append("MOVED_TOWARDS_ENEMY")
 
         self.previous_positions[own_position[0], own_position[1]] += 1
 
         if self.previous_positions[own_position[0], own_position[1]] > 1 or "WAITED" in events or "INVALID ACTION" in events:
             reward += self.REWARD_CONFIG["ALREADY_VISITED"] * self.previous_positions[
                 own_position[0], own_position[1]]  # push to explore new areas, avoid local maximas
-
+            events.append("ALREADY_VISITED")
         if old_features[1][center[0]+own_move[0],center[1]+own_move[1]] == 0 and old_features[1][center[0],center[1]]> 0:
             reward += self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"]
+            events.append("MOVED_OUT_OF_DANGER")
         if old_features[1][center[0]+own_move[0],center[1]+own_move[1]] != 0 and old_features[1][center[0],center[1]] == 0:
             reward -= self.REWARD_CONFIG["MOVED_OUT_OF_DANGER"] #handle this diffrently since its the explosion can change
-
+            events.append("MOVED_INTO_DANGER")
         self.rewards.append(reward)
 
         if not np.all(own_move == np.array([0, 0])): # only append rewards from valid movements
             self.movement_based_rewards.append(movement_reward)
 
-        return reward
+        return reward, events
