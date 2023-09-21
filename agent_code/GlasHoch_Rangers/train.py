@@ -118,8 +118,9 @@ class RewardHandler:
 
         own_position = old_game_state["self"][3]
         own_move = np.array(new_game_state["self"][3]) - np.array(old_game_state["self"][3])
-
+        field = old_game_state["field"]
         enemy_positions = [enemy[3] for enemy in old_game_state["others"]]
+
 
         if np.all(self.moves[-1] + own_move == np.array([0, 0])) and not np.all(own_move == np.array([0, 0])):
             if self.movement_based_rewards[-1] > 0:
@@ -185,7 +186,15 @@ class RewardHandler:
             events.append("MOVED_INTO_DANGER")
         self.rewards.append(reward)
 
+        #move inwards
+        sum_moves = np.sum(np.array(self.moves),axis=0)
+        if abs(sum_moves[0]) > 1 and abs(sum_moves[1]) >1:
+            reward += self.REWARD_CONFIG["LEFT_START_AXIS"]
+            events.append("LEFT_STRART_AXIS")
+            if abs(sum_moves[0]) != field.shape[0] or abs(sum_moves[0]) != field.shape[0]:
+                reward += self.REWARD_CONFIG["MOVED_INWARDS"]
+                events.append("MOVED_INWARDS")
         if not np.all(own_move == np.array([0, 0])): # only append rewards from valid movements
             self.movement_based_rewards.append(movement_reward)
-
+        print(events,reward)
         return reward, events
