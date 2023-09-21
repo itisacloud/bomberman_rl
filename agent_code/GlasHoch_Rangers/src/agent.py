@@ -206,9 +206,9 @@ class Agent():
     def act(self,features,state = None):
         if self.exploration_method == "epsilon-greedy" and self.training == True:
             if np.random.rand() < self.exploration_rate:
-                if self.curr_step > self.imitation_learning_cutoff:
-                    self.imitation_learning = False
                 if np.random.rand() < self.imitation_learning_rate and self.imitation_learning:
+                    if self.curr_step > self.imitation_learning_cutoff:
+                        self.imitation_learning = False
                     try:
                         action_idx = reversed[self.imitation_learning_expert.act(state)]
                     except:
