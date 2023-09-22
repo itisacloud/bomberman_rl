@@ -196,5 +196,4 @@ class RewardHandler:
                 events.append("MOVED_INWARDS")
         if not np.all(own_move == np.array([0, 0])): # only append rewards from valid movements
             self.movement_based_rewards.append(movement_reward)
-        print(events,reward)
         return reward, events
