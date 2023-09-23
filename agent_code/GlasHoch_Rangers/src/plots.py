@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import namedtuple, defaultdict
 from typing import List, DefaultDict
+import os
 
 class plot:
     def __init__(self, plot_update_interval=1000, max_steps_to_plot=10, running_mean_window=100,mode_plot = "static",imitation_learning=False):
@@ -28,12 +29,11 @@ class plot:
         self.mode_plot = mode_plot
 
         # Create a figure with subplots
-        self.fig, self.axs = plt.subplots(5, figsize=(10, 15))
+        self.fig, self.axs = plt.subplots(4, figsize=(10, 15))
         self.ax = self.axs[0]
         self.ax_1 = self.axs[1]
         self.ax_2 = self.axs[2]
         self.ax_3 = self.axs[3]
-        self.ax_4 = self.axs[4]
 
         self.loss_plot, = self.ax.plot([], [], label='Loss', color='blue')
         self.ax.set_xlabel('Steps')
@@ -51,18 +51,15 @@ class plot:
         self.ax_2.set_ylabel('Rewards per Game')
         self.ax_2.set_title('Total Reward')
 
-        self.event_plot = self.ax_3.bar([], [], label='Events', color='purple',alpha=0.5)
-        self.ax_3.set_xlabel('Games')
-        self.ax_3.set_ylabel('Event Counts')
-        self.ax_3.set_title('Event Counts')
 
-        self.exploration_rate_plot, = self.ax_4.plot([], [], label='Exploration Rate', color='orange')
+
+        self.exploration_rate_plot, = self.ax_3.plot([], [], label='Exploration Rate', color='orange')
         if self.imitation:
-            self.imitation_rate_plot, = self.ax_4.plot([], [], label='Imitation Rate', color='red')
-        self.ax_4.set_xlabel('Steps')
-        self.ax_4.set_ylabel('Exploration Rate')
-        self.ax_4.set_title('Exploration Rate')
-        self.ax_4.legend()
+            self.imitation_rate_plot, = self.ax_3.plot([], [], label='Imitation Rate', color='red')
+        self.ax_3.set_xlabel('Steps')
+        self.ax_3.set_ylabel('Exploration Rate')
+        self.ax_3.set_title('Exploration Rate')
+        self.ax_3.legend()
 
         self.fig.tight_layout()
 
@@ -98,6 +95,7 @@ class plot:
                                                 mode='valid')
                 self.ax.plot(range(self.running_mean_window_games*10, len(running_mean_loss) + self.running_mean_window_games*10),
                              running_mean_loss, label='Running Mean Loss', color='red')
+                self.ax.set_ylim(min(running_mean_loss), max(running_mean_loss))
 
             self.steps_per_game = [game - self.games[i - 1] for i, game in enumerate(self.games) if i > 0]
             self.steps_per_game_plot.set_data(range(len(self.steps_per_game)), self.steps_per_game)
@@ -133,9 +131,12 @@ class plot:
             self.exploration_rate_plot.set_data(self.steps, self.exploration_rate_history)
             if self.imitation:
                 self.imitation_rate_plot.set_data(self.steps, self.imitation_rate)
-            self.ax_4.relim()  # Recalculate limits
-            self.ax_4.autoscale_view(True, True, True)
+            self.ax_3.relim()  # Recalculate limits
+            self.ax_3.autoscale_view(True, True, True)
             plt.pause(0.1)
 
     def save(self,name):
-        plt.savefig(f"./plots/{len(self.games)}_{name}.png")
+        path = f"./plots/{name}"
+        if not os.path.exists(path):
+            os.makedirs(path)
+        plt.savefig(path+"/{name}.png")
