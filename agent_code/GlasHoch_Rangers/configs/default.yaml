@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_runer_6th_slightly_higher_lr_start_easy_less_imitation
+  agent_name: GlasHoch_long_runer_7th_batch_32_classic
 
   config_name: default
 
@@ -19,9 +19,9 @@ AGENT_CONFIG:
   # Training learning rates etc:
   optimizer: AdamW
 
-  learning_rate: 0.000025
+  learning_rate: 0.00025
   lr_scheduler_step: 1
-  lr_scheduler_gamma: 0.999995
+  lr_scheduler_gamma: 0.999998
   lr_scheduler_min: 0.00001
   loss_fn: MSE
   lr_scheduler: True
@@ -30,7 +30,7 @@ AGENT_CONFIG:
   # Info
   draw_plot: True
   mode_plot: static # "static" or "dynamic"
-  draw_plot_every: 100000
+  draw_plot_every: 50000
   debuggin: True
   debuggin_freq: 10000
 
@@ -52,7 +52,7 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: /models/GlasHoch_long_runer_5th_large_batch_higher_lr__against_random_default_600000.pth
+  load_path: models/GlasHoch_long_runer_6th_higher_lr_classic_default_1100000.pth
   save_every: 50000
 
 REWARD_CONFIG:
@@ -65,7 +65,7 @@ REWARD_CONFIG:
   BOMB_DROPPED: 0.2
   BOMB_EXPLODED: 0.0  # No normalization needed for zero rewards
   CRATE_DESTROYED: 1.0  # Adjusted for meaningful scale
-  COIN_FOUND: 1.0
+  COIN_FOUND: 0.6
   COIN_COLLECTED: 2.0
   KILLED_OPPONENT: 5.0
   KILLED_SELF: -2.0

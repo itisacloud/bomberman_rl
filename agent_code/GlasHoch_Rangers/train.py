@@ -88,9 +88,9 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     self.past_rewards.append(reward)
 
 
-
+   """ if self.debug
     print(self.past_events_count)
-    print([f" {events} : {reward} | {action} : {Qs} \n" for events,reward,action,Qs in zip(self.past_events,self.past_rewards,self.past_actions,self.past_Qs)])
+    print([f" {events} : {reward} | {action} : {Qs} \n" for events,reward,action,Qs in zip(self.past_events,self.past_rewards,self.past_actions,self.past_Qs)])"""
     self.past_events_count = defaultdict(int)
     self.past_events = []
     self.past_rewards = []

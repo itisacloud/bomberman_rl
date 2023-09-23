@@ -139,4 +139,4 @@ class plot:
         path = f"./plots/{name}"
         if not os.path.exists(path):
             os.makedirs(path)
-        plt.savefig(path+"/{name}.png")
+        plt.savefig(path+f"/{name}.png")
