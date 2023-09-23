@@ -111,8 +111,8 @@ class plot:
                     running_mean_steps, label='Running Mean Steps per Game', color='red')
 
             self.exploration_rate_plot.set_data(self.steps, self.exploration_rate_history)
-            self.ax_4.relim()
-            self.ax_4.autoscale_view(True, True, True)
+            self.ax_3.relim()
+            self.ax_3.autoscale_view(True, True, True)
 
             rewards_per_game = [sum(self.rewards[self.games[i-1]:game]) for i, game in enumerate(self.games) if i > 0]
             self.total_reward_plot.set_data(range(len(rewards_per_game)),rewards_per_game)
