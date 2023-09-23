@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_runer_6th_slightly_higher_lr_start_easy_no_imitation
+  agent_name: GlasHoch_long_runer_6th_slightly_higher_lr_start_easy
 
   config_name: default
 
