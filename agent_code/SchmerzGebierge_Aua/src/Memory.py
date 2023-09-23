@@ -12,7 +12,6 @@ rotated_actions = {
     5: 5
 }
 
-
 class Memory:
     def rotateFeature(self, rots, feature):
         return torch.rot90(feature, rots, (0, 1))

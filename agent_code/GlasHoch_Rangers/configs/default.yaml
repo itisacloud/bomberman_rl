@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_runer_3rd_slightly_higher_lr_start_easy_no_imitation_default
+  agent_name: GlasHoch_long_runer_6th_slightly_higher_lr_start_easy_no_imitation
 
   config_name: default
 
@@ -11,7 +11,7 @@ AGENT_CONFIG:
   # training
   batch_size: 32
   memory_size: 10000
-  burnin: 1000
+  burnin: 10
   learn_evry: 1
   sync_evry: 1000
   gamma: 0.95
@@ -19,10 +19,10 @@ AGENT_CONFIG:
   # Training learning rates etc:
   optimizer: AdamW
 
-  learning_rate: 0.00025
+  learning_rate: 0.000025
   lr_scheduler_step: 1
   lr_scheduler_gamma: 0.999995
-  lr_scheduler_min: 0.0001
+  lr_scheduler_min: 0.00001
   loss_fn: MSE
   lr_scheduler: True
 
@@ -32,13 +32,15 @@ AGENT_CONFIG:
   mode_plot: static # "static" or "dynamic"
   draw_plot_every: 100000
   debuggin: True
-  debuggin_freq: 1000
+  debuggin_freq: 10000
 
   # Exploration
   exploration_method: epsilon-greedy
-  exploration_rate: 0.15
+  exploration_rate: 0.2
   exploration_rate_decay: 0.999998
-  exploration_rate_min: 0.075
+  exploration_rate_min: 0.1
+  rotation_augment: False
+  rotation_augment_prob: 0
 
   # Imitation Learning
   imitation_learning: False
@@ -50,9 +52,8 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: /models/GlasHoch_long_runer_2nd_slightly_higher_lr_start_easy_no_imitation_default_1000000.pth
-
-  save_every: 10000
+  load_path: /models/GlasHoch_long_runer_5th_large_batch_higher_lr__against_random_default_600000.pth
+  save_every: 50000
 
 REWARD_CONFIG:
   MOVED_LEFT: 0.1  # Normalize rewards to be within a reasonable range
@@ -80,4 +81,4 @@ REWARD_CONFIG:
   MOVED_OUT_OF_DANGER: 0.1
   LEFT_START_AXIS: 0.05
   MOVED_INWARDS: 0.1
-  EXPERT_ACTION: 0.3
+  EXPERT_ACTION: 0
