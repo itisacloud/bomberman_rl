@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_runer_6th_slightly_higher_lr_start_easy
+  agent_name: GlasHoch_long_runer_6th_slightly_higher_lr_start_easy_less_imitation
 
   config_name: default
 
@@ -48,7 +48,7 @@ AGENT_CONFIG:
   imitation_learning_decay: 0.999995
   imitation_learning_min: 0.1
   imitation_learning_expert: rule_based_agent
-  imitation_learning_cutoff: 250000
+  imitation_learning_cutoff: 100000
 
   # checkpointing model
   load: True
