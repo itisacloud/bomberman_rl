@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_runer_8th_batch_16_lr_e5_1_no_imitation_classic
+  agent_name: GlasHoch_long_runer_8th_batch_32_lr_e5_1_sync_500_imitation_classic
 
   config_name: default
 
@@ -9,11 +9,11 @@ AGENT_CONFIG:
   curr_step: 0
 
   # training
-  batch_size: 16
+  batch_size: 32
   memory_size: 10000
   burnin: 1000
   learn_evry: 1
-  sync_evry: 1000
+  sync_evry: 500
   gamma: 0.95
 
   # Training learning rates etc:
@@ -36,14 +36,14 @@ AGENT_CONFIG:
 
   # Exploration
   exploration_method: epsilon-greedy
-  exploration_rate: 0.2
+  exploration_rate: 0.4
   exploration_rate_decay: 0.999998
   exploration_rate_min: 0.1
   rotation_augment: False
   rotation_augment_prob: 0
 
   # Imitation Learning
-  imitation_learning: False
+  imitation_learning: True
   imitation_learning_rate: 1
   imitation_learning_decay: 0.999995
   imitation_learning_min: 0.1
