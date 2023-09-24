@@ -52,7 +52,7 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_pathmodels/GlasHoch_long_runer_8th_batch_32_lr_e5_1_sync_500_imitation_classic_default_700000.pth
+  load_path: models/GlasHoch_long_runer_8th_batch_32_lr_e5_1_sync_500_imitation_classic_default_700000.pth
   save_every: 50000
 
 REWARD_CONFIG:
