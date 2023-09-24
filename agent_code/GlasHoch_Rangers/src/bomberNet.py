@@ -8,7 +8,7 @@ import torch
 from torch import nn
 from torch.nn.parallel import DataParallel  # Import DataParallel
 
-from .cache import Memory
+from .cache import cache
 
 actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
 
@@ -20,7 +20,7 @@ reversed = {"UP": 0,
             "BOMB": 5
             }
 
-class BomberNet(nn.Module):
+class bomberNet(nn.Module):
     def __init__(self, input_dim, output_dim, precision=torch.float32):
         super().__init__()
 

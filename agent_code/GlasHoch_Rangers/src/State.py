@@ -3,9 +3,7 @@ import heapq
 import numpy as np
 import torch
 
-
 rotations = [0, 1, 2, 3]
-
 
 class State:
     def __init__(self, window_size,enemies=0):
@@ -153,7 +151,7 @@ class State:
     def distance(self, pos1, pos2):
         return np.sum(np.abs(np.array(pos1) - np.array(pos2)))
 
-    def getReachabelFields(self, field, movable_fields, pos, steps=20):
+    def get_reachabel_fields(self, field, movable_fields, pos, steps=20):
         reachable_fields = np.zeros_like(field, dtype=np.int32)
         reachable_fields[pos[0], pos[1]] = 1
 
@@ -172,8 +170,7 @@ class State:
 
         return reachable_fields
 
-    def getFeatures(self, game_state):
-
+    def get_features(self, game_state):
 
         # get features
         self.current_step += 1
@@ -182,9 +179,7 @@ class State:
         coins = game_state['coins']
 
         agent_pos = game_state['self'][3]
-        has_bomb = game_state['self'][2]
 
-        explosion_map = game_state['explosion_map']
 
         others = game_state['others']
 
@@ -215,7 +210,7 @@ class State:
         enemies_idw_map = self.paths_to_idw_matrix(field, paths_to_enemies)
 
         moveable_fields = self.get_movable_fields(field, explosion_map, bomb, enemies_pos)
-        reachabel_fields = self.getReachabelFields(field, moveable_fields, agent_pos, )
+        reachabel_fields = self.get_reachabel_fields(field, moveable_fields, agent_pos, )
         # apply windows
 
         field = self.window(field, agent_pos, self.window_size, constant=-2)

@@ -19,13 +19,13 @@ def setup(self):
     self.REWARD_CONFIG = configs["REWARD_CONFIG"]
     self.agent = Agent(self.AGENT_CONFIG, self.REWARD_CONFIG, training=self.train)
     print(self.agent)
-    self.state_processor = State(window_size=int((self.AGENT_CONFIG["state_dim"][1] - 1) / 2))
+    self.state_processor = State(window_size=int((self.AGENT_CONFIG["features_dim"][1] - 1) / 2))
     self.draw_plot = self.AGENT_CONFIG["draw_plot"]
     if self.draw_plot:
         self.mode_plot = self.AGENT_CONFIG["mode_plot"]
 
 def act(self, game_state: dict) -> str:
-    features = self.state_processor.getFeatures(game_state)
+    features = self.state_processor.get_features(game_state)
     self.last_features = features
     action_idx = self.agent.act(features, game_state)
     return actions[action_idx]

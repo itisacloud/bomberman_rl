@@ -6,11 +6,11 @@ import numpy as np
 import torch
 import yaml
 
-from .BomberNet import BomberNet
+from .bomberNet import bomberNet
 from .expert import Expert
 import torch.nn.init as init
 
-actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
+actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
 
 reversed = {"UP": 0,
             "RIGHT": 1,
@@ -20,10 +20,7 @@ reversed = {"UP": 0,
             "BOMB": 5
             }
 
-
-
 class Agent():
-
     def initialize_weights_he(self,model):
         """if the network is not loaded, initialize the weights with He initialization"""
         for module in model.modules():
@@ -62,8 +59,7 @@ class Agent():
             self.imitation_learning_expert_name = "no_expert"
 
 
-
-        self.features_dim = AGENT_CONFIG["state_dim"]
+        self.features_dim = AGENT_CONFIG["features_dim"]
         self.action_dim = AGENT_CONFIG["action_dim"]
         self.batch_size = AGENT_CONFIG["batch_size"]
         self.save_every = AGENT_CONFIG["save_every"]
@@ -82,7 +78,7 @@ class Agent():
         self.save_dir = "./models"
 
         # setting up the network
-        self.net = BomberNet(input_dim=self.features_dim, output_dim=self.action_dim).float()
+        self.net = bomberNet(input_dim=self.features_dim, output_dim=self.action_dim).float()
         self.net = self.net.to(self.device)
         if AGENT_CONFIG["load"] == False:
             self.initialize_weights_he(self.net)
@@ -125,8 +121,12 @@ class Agent():
             self.debuggin_freq = AGENT_CONFIG["debuggin_freq"]
             self.previous_weight_norms = []
 
-
-
+        if AGENT_CONFIG["avoid_wait"] == True:
+            self.wait_counter = 0
+            self.avoid_wait = True
+            self.avoid_wait_limit = AGENT_CONFIG["avoid_wait_limit"]
+        else:
+            self.avoid_wait = False
 
 
     def learn(self,memory):
@@ -237,6 +237,15 @@ class Agent():
             else:
                 action_values = self.net(features, model="online") #exploitation
                 action_idx = torch.argmax(action_values, axis=1).item()
+                if self.avoid_wait:
+                    if action_idx == 4:
+                        self.wait_counter += 1
+                    else:
+                        self.wait_counter = 0
+                    if self.wait_counter > self.avoid_wait_limit:
+                        #select Q value with second highest value
+                        action_idx = torch.argsort(action_values, axis=1)[-2].item()
+                        self.wait_counter = 0
         elif self.exploration_method == "boltzmann" and self.training == True: #boltzmann exploration
             action_values = self.net(features, model="online")
             probabilities = torch.softmax(action_values / self.temperature, dim=-1)
@@ -303,7 +312,7 @@ class Agent():
                         'imitation_learning_min': self.imitation_learning_min,
                         'imitation_learning_expert': self.imitation_learning_expert_name,
                         'imitation_learning_expert_name': self.imitation_learning_expert_name,
-                        'state_dim': self.features_dim,
+                        'features_dim': self.features_dim,
                         'action_dim': self.action_dim,
                         'batch_size': self.batch_size,
                         'save_every': self.save_every,

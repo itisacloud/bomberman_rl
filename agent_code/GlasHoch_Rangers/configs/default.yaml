@@ -1,15 +1,13 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_runer_9th_batch_64_lr_e5_25_sync_500_imitation_classic
-
+  agent_name: GlasHoch_long_runer_10th_batch_32_lr_e5_1_sync_500_imitation_remove_bomb_reward_classic
   config_name: default
-
   # dimensions (change only when features change)
-  state_dim: [7, 9, 9]
+  features_dim: [7, 9, 9]
   action_dim: 6
   curr_step: 0
 
   # training
-  batch_size: 128
+  batch_size: 32
   memory_size: 10000
   burnin: 1000
   learn_evry: 1
@@ -25,7 +23,6 @@ AGENT_CONFIG:
   lr_scheduler_min: 0.000025
   loss_fn: MSE
   lr_scheduler: True
-
 
   # Info
   draw_plot: True
@@ -43,7 +40,7 @@ AGENT_CONFIG:
   rotation_augment_prob: 0
 
   # Imitation Learning
-  imitation_learning: True
+  imitation_learning: False
   imitation_learning_rate: 1
   imitation_learning_decay: 0.999995
   imitation_learning_min: 0.1
@@ -52,18 +49,21 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: models/GlasHoch_long_runer_8th_batch_32_lr_e5_1_sync_500_imitation_classic_default_700000.pth
+  load_path: models/GlasHoch_long_runer_9th_batch_32_lr_e5_1_sync_500_no_imitation_classic_default_1050000.pth
   save_every: 50000
 
+  avoid_wait: True
+  avoid_wait_limit: 10
+
 REWARD_CONFIG:
-  MOVED_LEFT: 0.1  # Normalize rewards to be within a reasonable range
+  MOVED_LEFT: 0.1
   MOVED_RIGHT: 0.1
   MOVED_UP: 0.1
   MOVED_DOWN: 0.1
-  WAITED: -0.2  # Negative rewards are also normalized
+  WAITED: -0.2
   INVALID_ACTION: -0.5
   BOMB_DROPPED: 0.2
-  BOMB_EXPLODED: 0.0  # No normalization needed for zero rewards
+  BOMB_EXPLODED: -0.2
   CRATE_DESTROYED: 1.0  # Adjusted for meaningful scale
   COIN_FOUND: 0.6
   COIN_COLLECTED: 2.0
@@ -80,5 +80,5 @@ REWARD_CONFIG:
   ALREADY_VISITED: -0.005  # Scaled down for small impact
   MOVED_OUT_OF_DANGER: 0.1
   LEFT_START_AXIS: 0.05
-  MOVED_INWARDS: 0.1
+  MOVED_INWARDS: 0.0
   EXPERT_ACTION: 0

@@ -4,7 +4,7 @@ from typing import List, DefaultDict
 import numpy as np
 
 from .src.State import State
-from .src.cache import Memory
+from .src.cache import cache
 from .src.plots import plot
 
 import matplotlib.pyplot as plt
@@ -19,7 +19,7 @@ moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 
 def setup_training(self):
     self.reward_handler = RewardHandler(self.REWARD_CONFIG)
-    self.memory = Memory(input_dim=self.AGENT_CONFIG["state_dim"], size=self.AGENT_CONFIG["memory_size"],rotation_augment = self.AGENT_CONFIG["rotation_augment"],rotation_augment_prob = self.AGENT_CONFIG["rotation_augment_prob"])
+    self.memory = cache(input_dim=self.AGENT_CONFIG["features_dim"], size=self.AGENT_CONFIG["memory_size"], rotation_augment = self.AGENT_CONFIG["rotation_augment"], rotation_augment_prob = self.AGENT_CONFIG["rotation_augment_prob"])
     self.past_rewards = []
     self.past_events = []
     self.past_Qs = []
@@ -32,11 +32,10 @@ def setup_training(self):
     if self.draw_plot:
         self.plot = plot(plot_update_interval=self.AGENT_CONFIG["draw_plot_every"],mode_plot=self.mode_plot,imitation_learning=True)
 
-
 def game_events_occurred(self, old_game_state: dict, own_action: str, new_game_state: dict, events: List[str]):
     # perform training here
     old_features = self.last_features
-    new_features = self.state_processor.getFeatures(new_game_state)
+    new_features = self.state_processor.get_features(new_game_state)
 
     if self.agent.imitation_learning and self.REWARD_CONFIG["EXPERT_ACTION"] > 0:
         expert_action = self.agent.imitation_learning_expert.act(old_game_state) == own_action

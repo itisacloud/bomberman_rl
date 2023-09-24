@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+
 actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',"BOMB"]
 
 rotated_actions = {
@@ -14,7 +15,7 @@ rotated_actions = {
 
 
 
-class Memory:
+class cache:
     def rotateFeature(self, rots, feature):
         return torch.rot90(feature, rots, (0, 1))
 
