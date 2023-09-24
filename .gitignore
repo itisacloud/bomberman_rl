@@ -114,3 +114,4 @@ results/
 bomberEnv_/
 .vscode/
 my-bomber-output
+.pylintrc
