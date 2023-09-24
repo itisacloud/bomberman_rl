@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --gres=gpu:3
+#SBATCH --gres=gpu:2
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task 2
 #SBATCH -p exercise
