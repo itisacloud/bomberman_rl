@@ -244,7 +244,12 @@ class Agent():
                         self.wait_counter = 0
                     if self.wait_counter > self.avoid_wait_limit:
                         #select Q value with second highest value
-                        action_idx = torch.argsort(action_values, axis=1)[-2].item()
+                        print("avoiding wait")
+                        try:
+                            action_idx = torch.argsort(action_values, axis=1)[-2].item()
+                        except:
+
+                            pass
                         self.wait_counter = 0
         elif self.exploration_method == "boltzmann" and self.training == True: #boltzmann exploration
             action_values = self.net(features, model="online")
