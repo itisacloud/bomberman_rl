@@ -52,7 +52,7 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: models/GlasHoch_long_runer_6th_higher_lr_classic_default_1100000.pth
+  load_path: models/GlasHoch_long_runer_6th_higher_lr_classic_default_1350000.pth
   save_every: 50000
 
 REWARD_CONFIG:
@@ -65,7 +65,7 @@ REWARD_CONFIG:
   BOMB_DROPPED: 0.2
   BOMB_EXPLODED: 0.0  # No normalization needed for zero rewards
   CRATE_DESTROYED: 1.0  # Adjusted for meaningful scale
-  COIN_FOUND: 0.6
+  COIN_FOUND: 0.6gi
   COIN_COLLECTED: 2.0
   KILLED_OPPONENT: 5.0
   KILLED_SELF: -2.0
