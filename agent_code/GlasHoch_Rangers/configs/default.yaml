@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_runer_10th_batch_32_lr_e5_1_sync_500_imitation_remove_bomb_reward_classic
+  agent_name: GlasHoch_long_runer_11th_batch_32_lr_e5_1_sync_500_no_imitation_remove_bomb_reward_classic
   config_name: default
   # dimensions (change only when features change)
   features_dim: [7, 9, 9]
@@ -35,7 +35,7 @@ AGENT_CONFIG:
   exploration_method: epsilon-greedy
   exploration_rate: 0.2
   exploration_rate_decay: 0.999998
-  exploration_rate_min: 0.1
+  exploration_rate_min: 0.05
   rotation_augment: False
   rotation_augment_prob: 0
 
@@ -49,11 +49,13 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: models/GlasHoch_long_runer_9th_batch_32_lr_e5_1_sync_500_no_imitation_classic_default_1050000.pth
+  load_path: models/GlasHoch_long_runer_10th_batch_32_lr_e5_1_sync_250_no_imitation_against_remove_bombreward_self_classic_default_300000.pth
   save_every: 50000
 
   avoid_wait: True
   avoid_wait_limit: 10
+  avoid_loops: True
+  avoid_loops_limit: 10
 
 REWARD_CONFIG:
   MOVED_LEFT: 0.1

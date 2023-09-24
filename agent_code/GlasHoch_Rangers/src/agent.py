@@ -1,5 +1,7 @@
-
+import heapq
 import os
+import re
+from collections import deque
 from pathlib import Path
 
 import numpy as np
@@ -125,9 +127,15 @@ class Agent():
             self.wait_counter = 0
             self.avoid_wait = True
             self.avoid_wait_limit = AGENT_CONFIG["avoid_wait_limit"]
+            self.last_pos = deque(maxlen=AGENT_CONFIG["avoid_wait_limit"])
         else:
             self.avoid_wait = False
 
+        if AGENT_CONFIG["avoid_loops"]:
+            self.avoid_loops = True
+            self.avoid_loops_limit = AGENT_CONFIG["avoid_loops_limit"]
+            self.last_moves = deque(maxlen=self.avoid_loops_limit)
+            self.possinle_loops = [[0 if i % 2 == 0 else 2 for i in range(2 * self.avoid_loops_limit)], [1 if i % 2 == 0 else 3 for i in range(2 * self.avoid_loops_limit)]]
 
     def learn(self,memory):
 
@@ -181,6 +189,7 @@ class Agent():
         weight_norms = [torch.norm(p) for p in self.net.parameters()]
         return weight_norms
 
+
     # the follwoing four functions are from the tutorial and only slightly modified, is this allowed? IMO its just a basic translation of the DQN algorithm and pretty basic
     def update_Q_online(self, td_estimate, td_target):
         """calculate the loss and backpropagate"""
@@ -213,6 +222,14 @@ class Agent():
         td_targets = (reward + (1 - done.float()) * self.gamma * next_Q_values).float()
         return td_targets
 
+    def has_alternating_pattern(self,letter_list):
+        letter_list = list(letter_list)
+        # Convert the list of letters to a string
+        for loop in self.possinle_loops:
+            if loop == letter_list:
+                return True
+        return False
+
     def act(self,features,state = None):
         """
         This function is called by the game environment and returns the action the agent wants to take
@@ -237,20 +254,8 @@ class Agent():
             else:
                 action_values = self.net(features, model="online") #exploitation
                 action_idx = torch.argmax(action_values, axis=1).item()
-                if self.avoid_wait:
-                    if action_idx == 4:
-                        self.wait_counter += 1
-                    else:
-                        self.wait_counter = 0
-                    if self.wait_counter > self.avoid_wait_limit:
-                        #select Q value with second highest value
-                        print("avoiding wait")
-                        try:
-                            action_idx = torch.argsort(action_values, axis=1)[-2].item()
-                        except:
 
-                            pass
-                        self.wait_counter = 0
+
         elif self.exploration_method == "boltzmann" and self.training == True: #boltzmann exploration
             action_values = self.net(features, model="online")
             probabilities = torch.softmax(action_values / self.temperature, dim=-1)
@@ -260,6 +265,30 @@ class Agent():
         else:
             action_values = self.net(features, model="online")
             action_idx = torch.argmax(action_values, axis=1).item()
+            if self.avoid_wait:
+                if action_idx == 4:
+                    self.wait_counter += 1
+                else:
+                    self.wait_counter = 0
+                if self.wait_counter > self.avoid_wait_limit:
+                    # select Q value with second highest value
+                    try:
+                        action_idx = torch.argsort(action_values, axis=1)[0][-2].item()
+                    except:
+                        pass
+                    self.wait_counter = 0
+            if self.avoid_loops:
+                self.last_moves.append(action_idx)
+                loop = self.has_alternating_pattern(self.last_moves)
+                if all(move == self.last_moves[0] for move in self.last_moves):
+                    loop = True
+                if loop == True:
+                    action_idx = torch.argsort(action_values, axis=1)[0][-2].item()
+
+                    if action_idx == 4: #make sure its not waiting if we have a invalid action_loop
+                        action_idx = torch.argsort(action_values, axis=1)[0][-3].item()
+
+
 
         #decay exploration rate
         self.exploration_rate *= self.exploration_rate_decay
