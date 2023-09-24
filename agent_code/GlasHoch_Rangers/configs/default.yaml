@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_runer_8th_batch_32_lr_e5_1_no_imitation_classic
+  agent_name: GlasHoch_long_runer_8th_batch_16_lr_e5_1_no_imitation_classic
 
   config_name: default
 
@@ -9,7 +9,7 @@ AGENT_CONFIG:
   curr_step: 0
 
   # training
-  batch_size: 64
+  batch_size: 16
   memory_size: 10000
   burnin: 1000
   learn_evry: 1
