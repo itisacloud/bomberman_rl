@@ -65,7 +65,7 @@ REWARD_CONFIG:
   BOMB_DROPPED: 0.2
   BOMB_EXPLODED: 0.0  # No normalization needed for zero rewards
   CRATE_DESTROYED: 1.0  # Adjusted for meaningful scale
-  COIN_FOUND: 0.6gi
+  COIN_FOUND: 0.6
   COIN_COLLECTED: 2.0
   KILLED_OPPONENT: 5.0
   KILLED_SELF: -2.0

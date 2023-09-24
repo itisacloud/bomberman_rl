@@ -25,13 +25,19 @@ reversed = {"UP": 0,
 class Agent():
 
     def initialize_weights_he(self,model):
+        """if the network is not loaded, initialize the weights with He initialization"""
         for module in model.modules():
             if isinstance(module, (torch.nn.Linear, torch.nn.Conv2d)):
                 init.kaiming_uniform_(module.weight, mode='fan_in', nonlinearity='relu')
                 if module.bias is not None:
                     init.constant_(module.bias, 0)
     def __init__(self,AGENT_CONFIG,REWARD_CONFIG,training):
-
+        """
+        Args:
+            AGENT_CONFIG:
+            REWARD_CONFIG:
+            training:
+        """
         self.training = training
 
         self.agent_name = AGENT_CONFIG["agent_name"]
@@ -177,6 +183,7 @@ class Agent():
 
     # the follwoing four functions are from the tutorial and only slightly modified, is this allowed? IMO its just a basic translation of the DQN algorithm and pretty basic
     def update_Q_online(self, td_estimate, td_target):
+        """calculate the loss and backpropagate"""
         loss = self.net.loss_fn(td_estimate, td_target)
         self.net.optimizer.zero_grad()
         loss.backward()
@@ -184,6 +191,9 @@ class Agent():
         return loss.item()
 
     def sync_Q_target(self):
+        """
+        copy the online network to the target network
+        """
         self.net.target.load_state_dict(self.net.online.state_dict())
 
     def td_estimate(self, features, action):
@@ -204,21 +214,30 @@ class Agent():
         return td_targets
 
     def act(self,features,state = None):
+        """
+        This function is called by the game environment and returns the action the agent wants to take
+        Args:
+            features:
+            state:
+
+        Returns:
+            integer of the Q with the highest value
+        """
         if self.exploration_method == "epsilon-greedy" and self.training == True:
-            if np.random.rand() < self.exploration_rate:
-                if np.random.rand() < self.imitation_learning_rate and self.imitation_learning:
-                    if self.curr_step > self.imitation_learning_cutoff:
+            if np.random.rand() < self.exploration_rate: #imitation and exploration greedy epsilon
+                if np.random.rand() < self.imitation_learning_rate and self.imitation_learning: #imitation threshold
+                    if self.curr_step > self.imitation_learning_cutoff: #imitation cutoff
                         self.imitation_learning = False
                     try:
                         action_idx = reversed[self.imitation_learning_expert.act(state)]
                     except:
                         action_idx = np.random.randint(self.action_dim)
-                else:
+                else: #randomized exploration
                     action_idx = np.random.randint(self.action_dim)
             else:
-                action_values = self.net(features, model="online")
+                action_values = self.net(features, model="online") #exploitation
                 action_idx = torch.argmax(action_values, axis=1).item()
-        elif self.exploration_method == "boltzmann" and self.training == True:
+        elif self.exploration_method == "boltzmann" and self.training == True: #boltzmann exploration
             action_values = self.net(features, model="online")
             probabilities = torch.softmax(action_values / self.temperature, dim=-1)
             action_idx = torch.multinomial(probabilities, 1).item()
@@ -228,12 +247,15 @@ class Agent():
             action_values = self.net(features, model="online")
             action_idx = torch.argmax(action_values, axis=1).item()
 
-
+        #decay exploration rate
         self.exploration_rate *= self.exploration_rate_decay
         self.exploration_rate = max(self.exploration_rate_min, self.exploration_rate)
 
+        #decay imitation learning rate
         self.imitation_learning_rate *= self.imitation_learning_decay
         self.imitation_learning_rate = max(self.imitation_learning_rate,self.imitation_learning_min)
+
+        #handle lr scheduler
         if self.lr_scheduling:
             self.lr_scheduler.step()
             for param_group in self.net.optimizer.param_groups:
