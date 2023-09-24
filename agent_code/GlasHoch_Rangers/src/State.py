@@ -67,7 +67,8 @@ class State:
         for bomb in bombs:
             pos = bomb[0]
             timer = bomb[1]
-            blast_coords = self.get_blast_coords(field, pos, bomb[1])
+
+            blast_coords = self.get_blast_coords(field, pos, blast_strength= 4)
 
             for x, y in blast_coords:
                 future_explosion_map[x, y] = max(4 - timer, future_explosion_map[x, y])
