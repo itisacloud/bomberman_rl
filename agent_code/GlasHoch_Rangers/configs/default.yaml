@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_runer_8th_batch_64_lr_e4_21_imitation_classic
+  agent_name: GlasHoch_long_runer_8th_batch_32_lr_e5_1_no_imitation_classic
 
   config_name: default
 
@@ -19,10 +19,10 @@ AGENT_CONFIG:
   # Training learning rates etc:
   optimizer: AdamW
 
-  learning_rate: 0.0001
+  learning_rate: 0.00001
   lr_scheduler_step: 1
   lr_scheduler_gamma: 0.999995
-  lr_scheduler_min: 0.000025
+  lr_scheduler_min: 0.00001
   loss_fn: MSE
   lr_scheduler: True
 
@@ -43,7 +43,7 @@ AGENT_CONFIG:
   rotation_augment_prob: 0
 
   # Imitation Learning
-  imitation_learning: True
+  imitation_learning: False
   imitation_learning_rate: 1
   imitation_learning_decay: 0.999995
   imitation_learning_min: 0.1
