@@ -43,7 +43,7 @@ AGENT_CONFIG:
   rotation_augment_prob: 0
 
   # Imitation Learning
-  imitation_learning: True
+  imitation_learning: False
   imitation_learning_rate: 1
   imitation_learning_decay: 0.999995
   imitation_learning_min: 0.1
@@ -52,7 +52,7 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: models/GlasHoch_long_runer_7th_batch_32_imitation_classic_default_200000.pth
+  load_path: models/models/GlasHoch_long_runer_8th_batch_32_lr_e5_1_sync_500_imitation_classic_default_700000.pth
   save_every: 50000
 
 REWARD_CONFIG:
@@ -76,7 +76,7 @@ REWARD_CONFIG:
   BOMB_NEAR_CRATE: 1.0
   BOMB_NEAR_ENEMY: 3.0
   OPPONENT_ELIMINATED: 0.1
-  SURVIVED_ROUND: 1.0
+  SURVIVED_ROUND: 0.2 # Adjusted for meaningful scale
   ALREADY_VISITED: -0.005  # Scaled down for small impact
   MOVED_OUT_OF_DANGER: 0.1
   LEFT_START_AXIS: 0.05
