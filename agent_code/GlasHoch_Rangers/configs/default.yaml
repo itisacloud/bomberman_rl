@@ -49,7 +49,8 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: models/GlasHoch_long_runer_10th_batch_32_lr_e5_1_sync_250_no_imitation_against_remove_bombreward_self_classic_default_300000.pth
+  load_path: models/GlasHoch_long_runer_11th_batch_32_lr_e5_1_sync_250_no_imitation_remove_bomb_reward_classic_default_1050000.pth
+
   save_every: 50000
 
   avoid_wait: True
@@ -75,7 +76,7 @@ REWARD_CONFIG:
   MOVED_TOWARDS_COIN_CLUSTER: 0.2
   MOVED_TOWARDS_ENEMY: 0.1
   TRAPPED_ENEMY: 0.5
-  BOMB_NEAR_CRATE: 1.0
+  BOMB_NEAR_CRATE: 0.5 #removed
   BOMB_NEAR_ENEMY: 3.0
   OPPONENT_ELIMINATED: 0.1
   SURVIVED_ROUND: 0.2 # Adjusted for meaningful scale

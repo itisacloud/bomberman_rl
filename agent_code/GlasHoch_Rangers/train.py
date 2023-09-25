@@ -17,6 +17,29 @@ move_events = ['MOVED_UP', 'MOVED_DOWN', 'MOVED_LEFT', 'MOVED_RIGHT']
 actions = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT',  'BOMB']
 moves = [[1, 0], [-1, 0], [0, 1], [0, -1]]
 
+
+def get_movable_fields_enmies(self,field, explosion_map, bombs, own_pos,enemies_pos):
+    reachable_fields_enemies = []
+    for enemy_pos in enemies_pos:
+        movable_fields = np.zeros_like(field)
+        for i in range(field.shape[0]):
+            for j in range(field.shape[1]):
+                if field[i, j] == 0:
+                    movable_fields[i, j] = 1
+                else:
+                    movable_fields[i, j] = -1
+                if explosion_map[i, j] > 2:
+                    movable_fields[i, j] = -1
+        for bombs in bombs:
+            pos = bombs[0]
+            movable_fields[pos[0], pos[1]] = -1
+        movable_fields[own_pos[0], own_pos[1]] = -1
+        for enemy_pos_2 in enemies_pos:
+            if enemy_pos_2 != enemy_pos:
+                movable_fields[enemy_pos_2[0], enemy_pos_2[1]] = -1
+        reach = self.state_processor.get_reachabel_fields(field, movable_fields, pos, steps=20)
+        n_reach = np.sum(reach)
+        reachable_fields_enemies.append(reach)
 def setup_training(self):
     self.reward_handler = RewardHandler(self.REWARD_CONFIG)
     self.memory = cache(input_dim=self.AGENT_CONFIG["features_dim"], size=self.AGENT_CONFIG["memory_size"], rotation_augment = self.AGENT_CONFIG["rotation_augment"], rotation_augment_prob = self.AGENT_CONFIG["rotation_augment_prob"])
@@ -156,6 +179,12 @@ class RewardHandler:
             pass
 
         center = np.array([int(old_features.shape[1] - 1) / 2, int(old_features.shape[2] - 1) / 2], dtype=int)
+        possible = [[0,1],[0,-1],[1,0],[-1,0]]
+        if "BOMB_DROPPED" in events:
+            for i in possible:
+                if field[center[0] + i[0], center[1] + i[1]] == 1:
+                    reward += self.REWARD_CONFIG["BOMB_NEAR_CRATE"]
+                    events.append("BOMB_NEAR_CRATE")
 
         if sum(own_move) != 0:
             if max([old_features[5][int(center[0] + pos[0])][int(center[1] + pos[1])] for pos in moves]) == \
@@ -191,6 +220,10 @@ class RewardHandler:
             if abs(sum_moves[0]) != field.shape[0] or abs(sum_moves[0]) != field.shape[0]:
                 reward += self.REWARD_CONFIG["MOVED_INWARDS"]
                 events.append("MOVED_INWARDS")
+        """      
+        reach_enemies = get_movable_fields_enmies(self,field, explosion_map, bombs, own_position,enemy_positions)
+        """
+
         if not np.all(own_move == np.array([0, 0])): # only append rewards from valid movements
             self.movement_based_rewards.append(movement_reward)
         return reward, events
