@@ -68,7 +68,7 @@ class State:
             pos = bomb[0]
             timer = bomb[1]
 
-            blast_coords = self.get_blast_coords(field, pos, blast_strength= 4)
+            blast_coords = self.get_blast_coords(field, pos, 4)
 
             for x, y in blast_coords:
                 future_explosion_map[x, y] = max(4 - timer, future_explosion_map[x, y])
@@ -225,17 +225,4 @@ class State:
         features = np.array([field,explosion_map,coins_pos_map,enemies_pos_map,reachabel_fields,coins_idw_map,enemies_idw_map]) # get features
 
         features = torch.tensor(features).to(torch.float32).to(self.device)
-        if self.test <= 10:
-            print("features -------------------------")
-            print("field:")
-            print(field)
-            print("explosions")
-            print(explosion_map)
-            print("enemy map")
-            print(enemies_pos_map)
-            print("coin map")
-            print(coins_pos_map)
-            print("coins_idw_map")
-            print(coins_idw_map)
-            self.test += 1
         return features
