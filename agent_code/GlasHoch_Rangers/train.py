@@ -221,27 +221,29 @@ class RewardHandler:
             if abs(sum_moves[0]) != field.shape[0] or abs(sum_moves[0]) != field.shape[0]:
                 reward += self.REWARD_CONFIG["MOVED_INWARDS"]
                 events.append("MOVED_INWARDS")
-        if min([self.state_processor.distance(own_position, enemy) for enemy in enemy_positions]) < 6:
-            old_field = old_game_state["field"]
-            old_bombs = old_game_state["bombs"]
-            old_explosion_map = self.state_processor.get_explosion_map(old_field, old_bombs)
-            old_enemies_pos = [enemy[3] for enemy in old_game_state["others"]]
-            old_reach = get_movable_fields_enmies(self,old_field, old_explosion_map, old_bombs, own_position,old_enemies_pos)
-            new_field = new_game_state["field"]
-            new_bombs = new_game_state["bombs"]
-            new_explosion_map = self.state_processor.get_explosion_map(new_field, new_bombs)
-            new_enemies_pos = [enemy[3] for enemy in new_game_state["others"]]
-            new_reach = get_movable_fields_enmies(self,new_field, new_explosion_map, new_bombs, own_position,new_enemies_pos)
-            for i,o in zip(old_reach,new_reach):
-                if i < o and old_game_state["step"] > 10:
-                    reward += self.REWARD_CONFIG["REDUCED_ENEMY_REACHABLE_FIELDS"]
-                    if o > 4:
-                        reward += self.REWARD_CONFIG["TRAPPED_ENEMY"]
-                        if new_game_state["self"][2] == True:
+        try:
+            if min([self.state_processor.distance(own_position, enemy) for enemy in enemy_positions]) < 6:
+                old_field = old_game_state["field"]
+                old_bombs = old_game_state["bombs"]
+                old_explosion_map = self.state_processor.get_explosion_map(old_field, old_bombs)
+                old_enemies_pos = [enemy[3] for enemy in old_game_state["others"]]
+                old_reach = get_movable_fields_enmies(self,old_field, old_explosion_map, old_bombs, own_position,old_enemies_pos)
+                new_field = new_game_state["field"]
+                new_bombs = new_game_state["bombs"]
+                new_explosion_map = self.state_processor.get_explosion_map(new_field, new_bombs)
+                new_enemies_pos = [enemy[3] for enemy in new_game_state["others"]]
+                new_reach = get_movable_fields_enmies(self,new_field, new_explosion_map, new_bombs, own_position,new_enemies_pos)
+                for i,o in zip(old_reach,new_reach):
+                    if i < o and old_game_state["step"] > 10:
+                        reward += self.REWARD_CONFIG["REDUCED_ENEMY_REACHABLE_FIELDS"]
+                        if o > 4:
                             reward += self.REWARD_CONFIG["TRAPPED_ENEMY"]
-                        events.append("TRAPPED_ENEMY")
-                    events.append("REDUCED_ENEMY_REACHABLE_FIELDS")
-
+                            if new_game_state["self"][2] == True:
+                                reward += self.REWARD_CONFIG["TRAPPED_ENEMY"]
+                            events.append("TRAPPED_ENEMY")
+                        events.append("REDUCED_ENEMY_REACHABLE_FIELDS")
+        except:
+            pass
 
 
         if not np.all(own_move == np.array([0, 0])): # only append rewards from valid movements
