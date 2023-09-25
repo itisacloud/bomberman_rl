@@ -1,5 +1,5 @@
 AGENT_CONFIG:
-  agent_name: GlasHoch_long_runer_11th_batch_32_lr_e5_1_sync_500_no_imitation_remove_bomb_reward_classic
+  agent_name: GlasHoch_long_runer_12th_batch_32_lr_e5_1_sync_250_with_trap_classic
   config_name: default
   # dimensions (change only when features change)
   features_dim: [7, 9, 9]
@@ -11,7 +11,7 @@ AGENT_CONFIG:
   memory_size: 10000
   burnin: 1000
   learn_evry: 1
-  sync_evry: 500
+  sync_evry: 250
   gamma: 0.95
 
   # Training learning rates etc:
@@ -49,7 +49,7 @@ AGENT_CONFIG:
 
   # checkpointing model
   load: True
-  load_path: models/GlasHoch_long_runer_11th_batch_32_lr_e5_1_sync_250_no_imitation_remove_bomb_reward_classic_default_1050000.pth
+  load_path: models/GlasHoch_long_runer_12th_batch_32_lr_e5_1_sync_250_no_imitation_remove_bomb_reward_classic_default_250000.pth
 
   save_every: 50000
 
@@ -75,7 +75,8 @@ REWARD_CONFIG:
   GOT_KILLED: -1.0
   MOVED_TOWARDS_COIN_CLUSTER: 0.2
   MOVED_TOWARDS_ENEMY: 0.1
-  TRAPPED_ENEMY: 0.5
+  REDUCED_ENEMY_REACHABLE_FIELDS: 0.2
+  TRAPPED_ENEMY: 1
   BOMB_NEAR_CRATE: 0.5 #removed
   BOMB_NEAR_ENEMY: 3.0
   OPPONENT_ELIMINATED: 0.1

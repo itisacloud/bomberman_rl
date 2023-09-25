@@ -96,7 +96,7 @@ class State:
         return movable_fields
 
 
-    def a_star(self, matrix, start, goal):
+    def a_star(self, matrix, start, goal): # algorithm based on https://www.redblobgames.com/pathfinding/a-star/implementation.html (modified) but its a standard alogrithm in GIScience so I m not sure if we need to cite this :D
         directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         open_set = [(0, start)]  # Priority queue (cost, position)
         closed_set = set()
